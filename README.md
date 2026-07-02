@@ -90,6 +90,13 @@ repositorio); añade una exclusión o repórtalo como falso positivo al fabrican
 Al ser un certificado autofirmado, Windows puede seguir mostrando "editor desconocido"
 en SmartScreen — eliminarlo del todo requiere un certificado de pago de una CA (OV/EV).
 
+**¿Tarda mucho en abrir (o "no responde") las primeras veces?** Es el antivirus
+(Avast CyberCapture, ESET LiveGuard, etc.) reteniendo el ejecutable mientras lo analiza
+en la nube por ser un archivo nuevo — vuelve a pasar tras cada actualización. El launcher
+muestra una pantalla de carga al instante, pero si el antivirus lo retiene la solución
+definitiva es añadir una exclusión para la carpeta:
+`%LOCALAPPDATA%\Programs\PureLauncher`
+
 ## Privacidad
 
 - El launcher **no tiene cuentas, analítica ni rastreo de ningún tipo**.

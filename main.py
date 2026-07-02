@@ -389,6 +389,15 @@ class Api:
         return {"ok": True}
 
 
+def _close_splash():
+    """Cierra la pantalla de carga (solo existe en la version empaquetada)."""
+    try:
+        import pyi_splash  # noqa: PLC0415
+        pyi_splash.close()
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def main():
     api = Api()
     window = webview.create_window(
@@ -401,7 +410,7 @@ def main():
         background_color="#17171c",
     )
     api.window = window
-    webview.start(debug="--debug" in sys.argv)
+    webview.start(_close_splash, debug="--debug" in sys.argv)
 
 
 if __name__ == "__main__":

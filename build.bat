@@ -10,7 +10,7 @@ python assets\build_assets.py || goto :error
 python assets\make_version_info.py || goto :error
 
 echo [2/6] Empaquetando launcher (PyInstaller, optimizado)...
-pyinstaller --noconfirm --clean --log-level WARN --windowed --name PureLauncher --icon assets\icon.ico --add-data "ui;ui" --version-file version_launcher.txt --optimize 2 --exclude-module tkinter --exclude-module unittest --exclude-module pydoc --exclude-module doctest --exclude-module xmlrpc --exclude-module lib2to3 --exclude-module sqlite3 --exclude-module test main.py || goto :error
+pyinstaller --noconfirm --clean --log-level WARN --windowed --name PureLauncher --icon assets\icon.ico --add-data "ui;ui" --version-file version_launcher.txt --splash assets\splash.png --optimize 2 --exclude-module unittest --exclude-module pydoc --exclude-module doctest --exclude-module xmlrpc --exclude-module lib2to3 --exclude-module sqlite3 --exclude-module test main.py || goto :error
 
 echo [3/6] Empaquetando herramienta de restauracion (onedir, menos falsos positivos)...
 if exist dist\Restaurar.exe del dist\Restaurar.exe

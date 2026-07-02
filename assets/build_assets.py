@@ -219,6 +219,31 @@ def build_png(size=1024, ss=4):
     return img.resize((size, size), Image.LANCZOS)
 
 
+def build_splash(logo_png):
+    """Pantalla de carga nativa (PyInstaller --splash): visible al instante."""
+    from PIL import ImageFont
+
+    w, h = 440, 260
+    img = Image.new("RGBA", (w, h), (20, 24, 29, 255))
+    d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, w - 1, h - 1], outline=(44, 53, 64, 255), width=2)
+    logo = logo_png.resize((120, 120), Image.LANCZOS)
+    img.paste(logo, ((w - 120) // 2, 34), logo)
+    try:
+        font_b = ImageFont.truetype("segoeuib.ttf", 24)
+        font_s = ImageFont.truetype("segoeui.ttf", 13)
+    except OSError:
+        font_b = font_s = ImageFont.load_default()
+
+    def center(text, y, font, fill):
+        tw = d.textlength(text, font=font)
+        d.text(((w - tw) / 2, y), text, font=font, fill=fill)
+
+    center("PURE LAUNCHER", 168, font_b, (237, 242, 246, 255))
+    center("Cargando…", 206, font_s, (141, 154, 167, 255))
+    return img.convert("RGB")
+
+
 def main():
     svg = build_svg()
     with open(os.path.join(ROOT, "ui", "logo.svg"), "w", encoding="utf-8") as f:
@@ -229,7 +254,8 @@ def main():
         os.path.join(HERE, "icon.ico"),
         sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
     )
-    print("assets generados: ui/logo.svg, assets/logo.png, assets/icon.ico")
+    build_splash(png).save(os.path.join(HERE, "splash.png"))
+    print("assets generados: ui/logo.svg, assets/logo.png, assets/icon.ico, assets/splash.png")
 
 
 if __name__ == "__main__":
