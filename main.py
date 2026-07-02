@@ -9,6 +9,7 @@ import threading
 import webview
 
 import mc_core
+import optimizer
 import updater
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +31,8 @@ DEFAULT_CONFIG = {
     "last_version": "",
     "resolution": None,
     "auto_check_updates": True,
+    "opt_level": "balanced",
+    "high_priority": True,
 }
 
 
@@ -53,11 +56,15 @@ class Api:
         self._busy = False
         self._pending_update = None
         self._auto_checked = False
+        self._launcher_obj = None
 
     # ------------------------------------------------------------ auxiliares
 
     def _launcher(self):
-        return mc_core.Launcher(self.config["game_dir"], progress=self._progress)
+        game_dir = os.path.abspath(self.config["game_dir"])
+        if self._launcher_obj is None or self._launcher_obj.game_dir != game_dir:
+            self._launcher_obj = mc_core.Launcher(game_dir, progress=self._progress)
+        return self._launcher_obj
 
     def _progress(self, stage, done, total, msg):
         payload = json.dumps(
@@ -87,6 +94,8 @@ class Api:
             "javaDetected": mc_core.find_java(),
             "appVersion": updater.APP_VERSION,
             "isInstalled": updater.is_frozen(),
+            "systemRamMb": optimizer.system_ram_mb(),
+            "recommendedRamMb": optimizer.recommended_ram_mb(),
         }
 
     def _auto_check_updates(self):
@@ -259,17 +268,24 @@ class Api:
                 launcher = self._launcher()
                 ctx = launcher.prepare(version_id)
                 java = self.config["java_path"] or mc_core.find_java()
+                xms_mb, opt_flags = optimizer.jvm_setup(
+                    self.config["opt_level"], self.config["ram_mb"]
+                )
                 cmd = launcher.build_command(
                     version_id, ctx, username, java,
                     self.config["ram_mb"],
                     extra_jvm=self.config["extra_jvm"],
                     block_services=self.config["block_services"],
                     resolution=self.config["resolution"],
+                    opt_flags=opt_flags,
+                    xms_mb=xms_mb,
                 )
                 log_path = os.path.join(
                     self.config["game_dir"], "logs", "purelauncher-latest.log"
                 )
-                self.process = launcher.launch(cmd, log_path)
+                self.process = launcher.launch(
+                    cmd, log_path, high_priority=self.config["high_priority"]
+                )
                 self._emit("gameStarted", {"pid": self.process.pid})
                 code = self.process.wait()
                 tail = ""

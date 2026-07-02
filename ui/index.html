@@ -89,6 +89,33 @@
       <div class="setting-ctrl ram-ctrl">
         <input type="range" id="ram-slider" min="1024" max="16384" step="512" value="4096">
         <span id="ram-value" class="ram-value">4.0 GB</span>
+        <button id="ram-auto-btn" class="btn ghost small" title="Ajustar según la RAM de este equipo">Auto</button>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Optimización del juego</h3>
+        <p>Afina la máquina virtual de Java (recolector G1 estilo Aikar) para
+           menos tirones y mejor rendimiento. <i>Máxima</i> reserva toda la RAM
+           al arrancar: más fluidez a cambio de un arranque algo más lento.</p>
+      </div>
+      <div class="setting-ctrl">
+        <select id="opt-level" class="version-select" style="min-width:180px">
+          <option value="off">Desactivada</option>
+          <option value="balanced">Equilibrada</option>
+          <option value="max">Máxima</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Prioridad alta del juego</h3>
+        <p>Ejecuta el juego con prioridad de CPU por encima de lo normal.</p>
+      </div>
+      <div class="setting-ctrl">
+        <label class="switch"><input type="checkbox" id="high-priority" checked><span class="knob"></span></label>
       </div>
     </div>
 

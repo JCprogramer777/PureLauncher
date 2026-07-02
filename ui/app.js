@@ -187,6 +187,8 @@ const UI = {
     // ajustes
     $("ram-slider").value = cfg.ram_mb;
     updateRamLabel();
+    $("opt-level").value = cfg.opt_level || "balanced";
+    $("high-priority").checked = cfg.high_priority !== false;
     $("block-services").checked = cfg.block_services;
     $("show-snapshots").checked = cfg.show_snapshots;
     $("java-path").value = cfg.java_path || "";
@@ -392,6 +394,17 @@ function wire() {
 
   // ajustes
   $("ram-slider").oninput = updateRamLabel;
+  $("ram-auto-btn").onclick = () => {
+    if (!UI.state || !UI.state.recommendedRamMb) return;
+    $("ram-slider").value = UI.state.recommendedRamMb;
+    updateRamLabel();
+    const total = UI.state.systemRamMb;
+    toast(
+      `RAM ajustada a ${(UI.state.recommendedRamMb / 1024).toFixed(1)} GB` +
+      (total ? ` (tu equipo tiene ${(total / 1024).toFixed(0)} GB)` : ""),
+      true
+    );
+  };
   $("pick-java-btn").onclick = async () => {
     const p = await pywebview.api.pick_java();
     if (p) $("java-path").value = p;
@@ -403,6 +416,8 @@ function wire() {
   $("save-settings-btn").onclick = async () => {
     await pywebview.api.save_settings({
       ram_mb: parseInt($("ram-slider").value, 10),
+      opt_level: $("opt-level").value,
+      high_priority: $("high-priority").checked,
       block_services: $("block-services").checked,
       show_snapshots: $("show-snapshots").checked,
       java_path: $("java-path").value.trim(),

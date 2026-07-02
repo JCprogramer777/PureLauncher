@@ -6,16 +6,19 @@ No hay autenticacion, analitica ni telemetria: el juego se lanza en modo offline
 """
 
 import hashlib
+import http.client
 import json
 import os
 import platform
 import re
 import shutil
 import subprocess
+import threading
+import time
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from urllib.request import Request, urlopen
+from urllib.parse import urlparse
 
 MANIFEST_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 RESOURCES_URL = "https://resources.download.minecraft.net"
@@ -28,10 +31,52 @@ IS_64BIT = platform.machine().endswith("64")
 
 # ---------------------------------------------------------------- utilidades
 
-def http_get(url, timeout=25):
-    req = Request(url, headers={"User-Agent": f"{LAUNCHER_NAME}/{LAUNCHER_VERSION}"})
-    with urlopen(req, timeout=timeout) as r:
-        return r.read()
+# Pool de conexiones keep-alive por hilo: al descargar miles de archivos
+# pequenos (assets) el handshake TLS por archivo es el cuello de botella.
+_pool = threading.local()
+
+
+def http_get(url, timeout=25, _depth=0):
+    if _depth > 4:
+        raise RuntimeError(f"Demasiadas redirecciones: {url}")
+    u = urlparse(url)
+    if u.scheme not in ("http", "https"):
+        raise ValueError(f"URL no soportada: {url}")
+    path = (u.path or "/") + (f"?{u.query}" if u.query else "")
+    conns = getattr(_pool, "conns", None)
+    if conns is None:
+        conns = _pool.conns = {}
+    key = f"{u.scheme}://{u.netloc}"
+    last_err = None
+    for attempt in range(2):
+        conn = conns.get(key)
+        try:
+            if conn is None:
+                cls = (http.client.HTTPSConnection if u.scheme == "https"
+                       else http.client.HTTPConnection)
+                conn = cls(u.netloc, timeout=max(timeout, 25))
+                conns[key] = conn
+            conn.request("GET", path, headers={
+                "User-Agent": f"{LAUNCHER_NAME}/{LAUNCHER_VERSION}",
+                "Connection": "keep-alive",
+            })
+            resp = conn.getresponse()
+            data = resp.read()
+            if resp.status in (301, 302, 303, 307, 308):
+                loc = resp.getheader("Location")
+                if loc:
+                    return http_get(loc, timeout, _depth + 1)
+            if resp.status != 200:
+                raise RuntimeError(f"HTTP {resp.status} en {url}")
+            return data
+        except (http.client.HTTPException, OSError) as e:
+            last_err = e
+            try:
+                conn.close()
+            except Exception:  # noqa: BLE001
+                pass
+            conns.pop(key, None)
+    raise RuntimeError(f"Fallo de red en {url}: {last_err}")
 
 
 def sha1_of(path):
@@ -42,11 +87,15 @@ def sha1_of(path):
     return h.hexdigest()
 
 
-def file_ok(path, sha1=None, size=None):
+def file_ok(path, sha1=None, size=None, quick=False):
     if not os.path.isfile(path):
         return False
     if size is not None and os.path.getsize(path) != size:
         return False
+    # quick: si el tamano coincide no rehasheamos (rehashear cientos de MB
+    # de assets en cada lanzamiento cuesta varios segundos).
+    if quick and size is not None:
+        return True
     if sha1:
         return sha1_of(path) == sha1
     return True
@@ -132,10 +181,19 @@ class Launcher:
 
     # ------------------------------------------------------------ manifiesto
 
-    def manifest(self, force=False):
+    def manifest(self, force=False, max_age=1800):
         cache = os.path.join(self.game_dir, "version_manifest_v2.json")
         if self._manifest and not force:
             return self._manifest
+        # Cache en disco reciente: evita un viaje de red en cada arranque.
+        if (not force and os.path.isfile(cache)
+                and time.time() - os.path.getmtime(cache) < max_age):
+            try:
+                with open(cache, encoding="utf-8") as f:
+                    self._manifest = json.load(f)
+                return self._manifest
+            except (OSError, ValueError):
+                pass
         try:
             data = http_get(MANIFEST_URL)
             os.makedirs(self.game_dir, exist_ok=True)
@@ -330,14 +388,15 @@ class Launcher:
     # ------------------------------------------------------------- descargas
 
     def _download_all(self, downloads, stage, label):
-        pending = [d for d in downloads if not file_ok(d[1], d[2], d[3])]
+        pending = [d for d in downloads if not file_ok(d[1], d[2], d[3], quick=True)]
         total = len(pending)
         if not total:
             return
         done = 0
         self.progress(stage, 0, total, label)
         errors = []
-        with ThreadPoolExecutor(max_workers=16) as pool:
+        workers = min(32, max(12, (os.cpu_count() or 4) * 3))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             futs = {pool.submit(download_file, url, path, sha1, size): path
                     for url, path, sha1, size in pending}
             for fut in as_completed(futs):
@@ -409,7 +468,8 @@ class Launcher:
     # --------------------------------------------------------------- comando
 
     def build_command(self, version_id, ctx, username, java, ram_mb,
-                      extra_jvm="", block_services=True, resolution=None):
+                      extra_jvm="", block_services=True, resolution=None,
+                      opt_flags=None, xms_mb=512):
         vdata = ctx["vdata"]
         cp = os.pathsep.join(ctx["classpath"])
         assets_root = self.assets_dir
@@ -459,8 +519,10 @@ class Launcher:
                 out.extend(sub(v) for v in value)
             return out
 
-        cmd = [java, f"-Xms512M", f"-Xmx{int(ram_mb)}M",
+        cmd = [java, f"-Xms{int(xms_mb)}M", f"-Xmx{int(ram_mb)}M",
                "-Dlog4j2.formatMsgNoLookups=true"]
+        if opt_flags:
+            cmd.extend(opt_flags)
         if block_services:
             # Redirige los servicios de Mojang (auth, sesion, telemetria) a un
             # host invalido: el juego no puede enviar nada aunque lo intente.
@@ -487,10 +549,12 @@ class Launcher:
                         "--height", subs["resolution_height"]])
         return cmd
 
-    def launch(self, cmd, log_path):
+    def launch(self, cmd, log_path, high_priority=False):
         os.makedirs(os.path.dirname(log_path), exist_ok=True)
         log = open(log_path, "w", encoding="utf-8", errors="replace")
         flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+        if high_priority and os.name == "nt":
+            flags |= subprocess.ABOVE_NORMAL_PRIORITY_CLASS
         return subprocess.Popen(
             cmd, cwd=self.game_dir, stdout=log, stderr=subprocess.STDOUT,
             creationflags=flags,
