@@ -35,6 +35,16 @@ Notas: la actualización automática solo aplica en la versión instalada (.exe)
 debe ser numérico (`v1.2.0`); el zip debe contener el contenido de `dist\PureLauncher`
 (lo hace `build.bat` solo).
 
+## Skins
+
+Pestaña **Skins**: biblioteca con vista previa de tus skins. Importa por **archivo PNG**
+o por **enlace directo**, ponles nombre y elige el modelo (clásico o slim). Acepta
+skins 64×64 y el formato antiguo 64×32 (se convierte solo). La skin activa se aplica
+mediante un resource pack (`PureSkin`) que el launcher genera y activa automáticamente
+al lanzar el juego — funciona **100% offline**. Nota: en modo offline el modelo
+(brazos anchos/slim) en partida lo asigna el juego según tu nombre; la textura se ve
+igual en ambos casos.
+
 ## Restauración (actualizaciones corruptas)
 
 Antes de aplicar cualquier actualización, el launcher guarda una **copia de seguridad

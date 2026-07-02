@@ -359,6 +359,76 @@ body {
 .install-item .meta.warn { color: #e8b339; }
 .empty-note { color: var(--text-dim); text-align: center; margin-top: 70px; line-height: 1.8; }
 
+/* ---------------------------------------------------------------------- skins */
+.skins-note {
+  font-size: 13px; color: var(--text-dim);
+  margin: -10px 0 20px; line-height: 1.5; max-width: 640px;
+}
+
+.skin-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.skin-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 14px 14px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 6px;
+  transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.skin-card:hover {
+  border-color: var(--border-hi);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .3);
+}
+.skin-card.active {
+  border-color: rgba(46, 204, 113, .55);
+  box-shadow: 0 0 0 1px rgba(46, 204, 113, .35), 0 8px 24px rgba(46, 204, 113, .12);
+}
+.skin-card canvas {
+  width: 96px; height: 192px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, .45));
+}
+.skin-card .skin-name {
+  font-weight: 600; font-size: 14px; margin-top: 4px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.skin-card .skin-variant {
+  font-size: 11px; color: var(--text-dim);
+  background: rgba(255, 255, 255, .06);
+  padding: 2px 9px; border-radius: 10px;
+}
+.skin-card .skin-actions { display: flex; gap: 6px; margin-top: 8px; }
+
+.active-ghost { border-color: rgba(46, 204, 113, .55) !important; color: #6fe3b2 !important; }
+
+.skin-preview-row {
+  display: flex; gap: 22px; margin-top: 18px; align-items: flex-start;
+}
+#skin-preview {
+  width: 96px; height: 192px; flex-shrink: 0;
+  image-rendering: pixelated;
+  background:
+    repeating-conic-gradient(rgba(255,255,255,.05) 0 25%, transparent 0 50%)
+    0 0 / 16px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.skin-preview-side { flex: 1; min-width: 0; }
+.variant-row { display: flex; gap: 16px; margin-top: 2px; }
+.variant-opt {
+  font-size: 13px; color: var(--text);
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+}
+.variant-opt input { accent-color: var(--green); }
+.skin-status { font-size: 12.5px; color: var(--text-dim); margin-top: 14px; }
+
 /* -------------------------------------------------------------------- ajustes */
 .setting {
   display: flex; align-items: center; justify-content: space-between;

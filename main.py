@@ -1,5 +1,6 @@
 """PureLauncher: launcher de Minecraft ligero, offline y sin telemetria."""
 
+import base64
 import json
 import os
 import subprocess
@@ -10,6 +11,7 @@ import webview
 
 import mc_core
 import optimizer
+import skins
 import updater
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -57,6 +59,7 @@ class Api:
         self._pending_update = None
         self._auto_checked = False
         self._launcher_obj = None
+        self.skins = skins.SkinManager(CONFIG_DIR)
 
     # ------------------------------------------------------------ auxiliares
 
@@ -154,6 +157,61 @@ class Api:
                 self._busy = False
 
         threading.Thread(target=work, daemon=True).start()
+        return {"ok": True}
+
+    # ---------------------------------------------------------------- skins
+
+    def list_skins(self):
+        return self.skins.list()
+
+    def pick_skin_file(self):
+        paths = self.window.create_file_dialog(
+            webview.OPEN_DIALOG, file_types=("Skin PNG (*.png)",)
+        )
+        return paths[0] if paths else None
+
+    def fetch_skin_source(self, kind, value):
+        """Lee la skin en bruto (archivo o URL) y la devuelve en base64
+        para que la interfaz la normalice a 64x64 con canvas."""
+        try:
+            if kind == "file":
+                with open(value, "rb") as f:
+                    data = f.read()
+            else:
+                if not value.lower().startswith(("http://", "https://")):
+                    raise ValueError("El enlace debe empezar por http:// o https://")
+                data = mc_core.http_get(value.strip())
+            if len(data) > 4 * 1024 * 1024:
+                raise ValueError("El archivo es demasiado grande.")
+            skins.png_size(data)  # valida que sea PNG
+            return {"ok": True,
+                    "b64": "data:image/png;base64,"
+                           + base64.b64encode(data).decode("ascii")}
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "error": str(e)}
+
+    def save_skin(self, name, variant, data_url):
+        try:
+            b64 = data_url.split(",", 1)[1]
+            skin_id = self.skins.add(name, variant, base64.b64decode(b64))
+            return {"ok": True, "id": skin_id}
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "error": str(e)}
+
+    def set_active_skin(self, skin_id):
+        try:
+            self.skins.set_active(skin_id)
+            if skin_id is None:
+                self.skins.remove_pack(self.config["game_dir"])
+            return {"ok": True}
+        except Exception as e:  # noqa: BLE001
+            return {"ok": False, "error": str(e)}
+
+    def delete_skin(self, skin_id):
+        was_active = (self.skins.active() or {}).get("id") == skin_id
+        self.skins.delete(skin_id)
+        if was_active:
+            self.skins.remove_pack(self.config["game_dir"])
         return {"ok": True}
 
     def download_vanilla(self, version_id):
@@ -267,6 +325,15 @@ class Api:
             try:
                 launcher = self._launcher()
                 ctx = launcher.prepare(version_id)
+                try:
+                    # Aplica la skin activa (resource pack); si falla no
+                    # bloquea el lanzamiento.
+                    self.skins.build_pack(
+                        self.config["game_dir"], version_id,
+                        modern="arguments" in ctx["vdata"],
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
                 java = self.config["java_path"] or mc_core.find_java()
                 xms_mb, opt_flags = optimizer.jvm_setup(
                     self.config["opt_level"], self.config["ram_mb"]

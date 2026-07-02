@@ -198,6 +198,8 @@ const UI = {
     $("app-version").textContent =
       this.state.appVersion + (this.state.isInstalled ? "" : " (desarrollo)");
     $("side-version").textContent = "v" + this.state.appVersion;
+
+    Skins.refreshList();
   },
 
   async loadRemoteVersions() {
@@ -288,6 +290,152 @@ function showUpdateModal(info) {
 function validateImport() {
   $("import-confirm").disabled = !($("jar-path").value && $("base-version").value);
 }
+
+// ------------------------------------------------------------------- skins
+
+const Skins = {
+  pendingCanvas: null, // skin normalizada 64x64 lista para guardar
+
+  // Convierte cualquier fuente a un canvas 64x64 (incluye skins antiguas 64x32).
+  async normalize(dataUrl) {
+    const img = new Image();
+    await new Promise((res, rej) => {
+      img.onload = res;
+      img.onerror = () => rej(new Error("No se pudo leer la imagen."));
+      img.src = dataUrl;
+    });
+    const ratio = img.width / img.height;
+    if (img.width < 64 || (ratio !== 1 && ratio !== 2)) {
+      throw new Error(`Tamaño no válido (${img.width}×${img.height}). ` +
+                      "Debe ser 64×64, 64×32 o un múltiplo HD.");
+    }
+    const c = document.createElement("canvas");
+    c.width = 64; c.height = 64;
+    const g = c.getContext("2d");
+    g.imageSmoothingEnabled = false;
+    const legacy = ratio === 2;
+    g.drawImage(img, 0, 0, img.width, img.height, 0, 0, 64, legacy ? 32 : 64);
+    if (legacy) this._convertLegacy(g);
+    return c;
+  },
+
+  // Sintetiza brazo/pierna izquierdos (espejados) para skins 64x32.
+  _convertLegacy(g) {
+    const flip = (sx, sy, w, h, dx, dy) => {
+      const t = document.createElement("canvas");
+      t.width = w; t.height = h;
+      const tg = t.getContext("2d");
+      tg.translate(w, 0); tg.scale(-1, 1);
+      tg.drawImage(g.canvas, sx, sy, w, h, 0, 0, w, h);
+      g.drawImage(t, dx, dy);
+    };
+    // pierna izquierda desde la derecha
+    flip(4, 16, 4, 4, 20, 48);   // arriba
+    flip(8, 16, 4, 4, 24, 48);   // abajo
+    flip(8, 20, 4, 12, 16, 52);  // interior
+    flip(4, 20, 4, 12, 20, 52);  // frente
+    flip(0, 20, 4, 12, 24, 52);  // exterior
+    flip(12, 20, 4, 12, 28, 52); // detrás
+    // brazo izquierdo desde el derecho
+    flip(44, 16, 4, 4, 36, 48);
+    flip(48, 16, 4, 4, 40, 48);
+    flip(48, 20, 4, 12, 32, 52);
+    flip(44, 20, 4, 12, 36, 52);
+    flip(40, 20, 4, 12, 40, 52);
+    flip(52, 20, 4, 12, 44, 52);
+  },
+
+  // Dibuja la vista frontal (cabeza+cuerpo+brazos+piernas, con capas).
+  render(canvas, skin, slim) {
+    const s = canvas.width / 16;
+    const g = canvas.getContext("2d");
+    g.imageSmoothingEnabled = false;
+    g.clearRect(0, 0, canvas.width, canvas.height);
+    const aw = slim ? 3 : 4;
+    const d = (sx, sy, w, h, dx, dy) =>
+      g.drawImage(skin, sx, sy, w, h, dx * s, dy * s, w * s, h * s);
+    d(4, 20, 4, 12, 4, 20);            // pierna derecha
+    d(20, 52, 4, 12, 8, 20);           // pierna izquierda
+    d(20, 20, 8, 12, 4, 8);            // cuerpo
+    d(44, 20, aw, 12, 4 - aw, 8);      // brazo derecho
+    d(36, 52, aw, 12, 12, 8);          // brazo izquierdo
+    d(8, 8, 8, 8, 4, 0);               // cabeza
+    // capas exteriores
+    d(4, 36, 4, 12, 4, 20);
+    d(4, 52, 4, 12, 8, 20);
+    d(20, 36, 8, 12, 4, 8);
+    d(44, 36, aw, 12, 4 - aw, 8);
+    d(52, 52, aw, 12, 12, 8);
+    d(40, 8, 8, 8, 4, 0);              // gorro
+  },
+
+  async refreshList() {
+    const list = await pywebview.api.list_skins();
+    const grid = $("skin-list");
+    grid.innerHTML = "";
+    $("skin-empty").classList.toggle("hidden", list.length > 0);
+    $("skin-none-btn").classList.toggle(
+      "active-ghost", !list.some((s) => s.active)
+    );
+    for (const s of list) {
+      const li = document.createElement("li");
+      li.className = "skin-card" + (s.active ? " active" : "");
+      li.innerHTML = `
+        <canvas width="96" height="192"></canvas>
+        <div class="skin-name"></div>
+        <div class="skin-variant">${s.variant === "slim" ? "Slim" : "Clásico"}</div>
+        <div class="skin-actions">
+          <button class="btn primary small use-btn">${s.active ? "✓ En uso" : "Usar"}</button>
+          <button class="btn ghost small del-btn" title="Eliminar">🗑</button>
+        </div>`;
+      li.querySelector(".skin-name").textContent = s.name;
+      const img = new Image();
+      img.onload = () =>
+        this.render(li.querySelector("canvas"), img, s.variant === "slim");
+      img.src = s.dataUrl;
+      li.querySelector(".use-btn").onclick = async () => {
+        if (s.active) return;
+        const r = await pywebview.api.set_active_skin(s.id);
+        if (!r.ok) { toast(r.error); return; }
+        toast(`Skin “${s.name}” activada. Se aplicará al lanzar el juego.`, true);
+        this.refreshList();
+      };
+      li.querySelector(".del-btn").onclick = async () => {
+        await pywebview.api.delete_skin(s.id);
+        toast(`Skin “${s.name}” eliminada.`, true);
+        this.refreshList();
+      };
+      grid.appendChild(li);
+    }
+  },
+
+  async loadSource(kind, value) {
+    $("skin-status").textContent = "Cargando…";
+    const res = await pywebview.api.fetch_skin_source(kind, value);
+    if (!res.ok) {
+      $("skin-status").textContent = "Error: " + res.error;
+      return;
+    }
+    try {
+      this.pendingCanvas = await this.normalize(res.b64);
+    } catch (e) {
+      this.pendingCanvas = null;
+      $("skin-save").disabled = true;
+      $("skin-status").textContent = "Error: " + e.message;
+      return;
+    }
+    this.updatePreview();
+    $("skin-save").disabled = false;
+    $("skin-status").textContent = "Skin lista. Ponle nombre y guárdala.";
+  },
+
+  updatePreview() {
+    if (!this.pendingCanvas) return;
+    const slim =
+      document.querySelector('input[name="skin-variant"]:checked').value === "slim";
+    this.render($("skin-preview"), this.pendingCanvas, slim);
+  },
+};
 
 // ------------------------------------------------------------------- wiring
 
@@ -436,6 +584,56 @@ function wire() {
   };
 
   $("log-close").onclick = () => hide("modal-log");
+
+  // skins
+  $("skin-import-btn").onclick = () => {
+    Skins.pendingCanvas = null;
+    $("skin-name").value = "";
+    $("skin-url").value = "";
+    $("skin-save").disabled = true;
+    $("skin-status").textContent = "Sin skin cargada.";
+    const g = $("skin-preview").getContext("2d");
+    g.clearRect(0, 0, 96, 192);
+    show("modal-skin");
+  };
+  $("skin-cancel").onclick = () => hide("modal-skin");
+  $("skin-pick-file").onclick = async () => {
+    const p = await pywebview.api.pick_skin_file();
+    if (!p) return;
+    if (!$("skin-name").value) {
+      $("skin-name").value = p.split(/[\\/]/).pop().replace(/\.png$/i, "");
+    }
+    Skins.loadSource("file", p);
+  };
+  $("skin-load-url").onclick = () => {
+    const url = $("skin-url").value.trim();
+    if (url) Skins.loadSource("url", url);
+  };
+  $("skin-url").onkeydown = (e) => {
+    if (e.key === "Enter") $("skin-load-url").click();
+  };
+  document.querySelectorAll('input[name="skin-variant"]').forEach((r) => {
+    r.onchange = () => Skins.updatePreview();
+  });
+  $("skin-save").onclick = async () => {
+    if (!Skins.pendingCanvas) return;
+    const variant =
+      document.querySelector('input[name="skin-variant"]:checked').value;
+    const res = await pywebview.api.save_skin(
+      $("skin-name").value.trim(),
+      variant,
+      Skins.pendingCanvas.toDataURL("image/png")
+    );
+    if (!res.ok) { toast(res.error); return; }
+    hide("modal-skin");
+    toast("Skin guardada en la biblioteca.", true);
+    Skins.refreshList();
+  };
+  $("skin-none-btn").onclick = async () => {
+    await pywebview.api.set_active_skin(null);
+    toast("Skin desactivada: volverás a la skin por defecto.", true);
+    Skins.refreshList();
+  };
 }
 
 window.addEventListener("pywebviewready", () => {

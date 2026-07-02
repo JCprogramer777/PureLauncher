@@ -20,6 +20,10 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
       <span>Versiones</span>
     </button>
+    <button class="tab" data-page="skins" title="Skins">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20.5c1.2-3.4 3.9-5 7-5s5.8 1.6 7 5"/></svg>
+      <span>Skins</span>
+    </button>
     <button class="tab" data-page="settings" title="Ajustes">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
       <span>Ajustes</span>
@@ -81,6 +85,28 @@
       <p id="install-empty" class="empty-note">
         No hay versiones instaladas todavía.<br>
         Pulsa <b>“Importar mi .jar”</b> o <b>“Descargar versión”</b> para empezar.
+      </p>
+    </div>
+  </main>
+
+  <!-- ============================ SKINS ========================== -->
+  <main id="page-skins" class="page">
+    <div class="page-inner">
+      <div class="page-head">
+        <h2>Skins</h2>
+        <div class="head-actions">
+          <button id="skin-none-btn" class="btn ghost">Sin skin</button>
+          <button id="skin-import-btn" class="btn primary">+ Importar skin</button>
+        </div>
+      </div>
+      <p class="skins-note">La skin activa se aplica con un pack de recursos generado
+         automáticamente al lanzar el juego — funciona offline. El modelo
+         (ancho/slim) en partida lo decide el juego según tu nombre; tu textura
+         se ve igual.</p>
+      <ul id="skin-list" class="skin-grid"></ul>
+      <p id="skin-empty" class="empty-note">
+        No tienes skins todavía.<br>
+        Pulsa <b>“Importar skin”</b> y elige un PNG o pega un enlace.
       </p>
     </div>
   </main>
@@ -244,6 +270,40 @@
     <div class="modal-actions">
       <button id="dl-cancel" class="btn ghost">Cancelar</button>
       <button id="dl-confirm" class="btn primary" disabled>Descargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================= MODAL IMPORTAR SKIN =================== -->
+<div id="modal-skin" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>Importar skin</h2>
+    <p class="modal-note">Desde un archivo PNG o un enlace directo a la imagen
+       (64×64 o formato antiguo 64×32; se convierte sola).</p>
+
+    <div class="row gap">
+      <button id="skin-pick-file" class="btn ghost small">Elegir archivo…</button>
+      <input type="text" id="skin-url" class="text-input wide" placeholder="…o pega un enlace https://….png" spellcheck="false">
+      <button id="skin-load-url" class="btn ghost small">Cargar</button>
+    </div>
+
+    <div class="skin-preview-row">
+      <canvas id="skin-preview" width="96" height="192"></canvas>
+      <div class="skin-preview-side">
+        <label class="field-label">Nombre</label>
+        <input type="text" id="skin-name" class="text-input wide" maxlength="32" placeholder="Mi skin">
+        <label class="field-label">Modelo</label>
+        <div class="variant-row">
+          <label class="variant-opt"><input type="radio" name="skin-variant" value="classic" checked> Clásico (4&nbsp;px)</label>
+          <label class="variant-opt"><input type="radio" name="skin-variant" value="slim"> Slim (3&nbsp;px)</label>
+        </div>
+        <p id="skin-status" class="skin-status">Sin skin cargada.</p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="skin-cancel" class="btn ghost">Cancelar</button>
+      <button id="skin-save" class="btn primary" disabled>Guardar en la biblioteca</button>
     </div>
   </div>
 </div>
