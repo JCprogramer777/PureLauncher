@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PureLauncher</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="logo-img" src="logo.svg" alt="" draggable="false">
+    <span class="brand-name"><b>PURE</b>LAUNCHER</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-page="play">Jugar</button>
+    <button class="tab" data-page="installs">Instalaciones</button>
+    <button class="tab" data-page="settings">Ajustes</button>
+  </nav>
+  <div class="top-right">
+    <span class="badge-notrack" title="Este launcher no envía datos a nadie. Los servicios de Mojang se bloquean al lanzar el juego.">
+      &#128274; Sin telemetría
+    </span>
+  </div>
+</header>
+
+<!-- ============================ JUGAR ============================ -->
+<main id="page-play" class="page active">
+  <section class="hero">
+    <div class="hero-art"></div>
+    <div class="hero-content">
+      <img class="hero-logo" src="logo.svg" alt="PureLauncher" draggable="false">
+      <h1 class="wordmark"><b>PURE</b> LAUNCHER</h1>
+      <p id="hero-sub">Rápido, limpio y sin telemetría. Tu juego, tus reglas.</p>
+    </div>
+  </section>
+
+  <footer class="playbar">
+    <div class="playbar-side left">
+      <label class="mini-label">Versión</label>
+      <select id="version-select" class="version-select">
+        <option value="">— importa una versión —</option>
+      </select>
+    </div>
+    <button id="play-btn" class="play-btn" disabled>
+      <span class="play-label">JUGAR</span>
+      <span class="play-sub" id="play-sub"></span>
+    </button>
+    <div class="playbar-side right">
+      <label class="mini-label" for="username">Nombre de jugador</label>
+      <div class="user-row">
+        <div class="steve" aria-hidden="true"></div>
+        <input id="username" maxlength="16" spellcheck="false" autocomplete="off" placeholder="Jugador">
+      </div>
+    </div>
+  </footer>
+</main>
+
+<!-- ======================== INSTALACIONES ======================== -->
+<main id="page-installs" class="page">
+  <div class="page-inner">
+    <div class="page-head">
+      <h2>Instalaciones</h2>
+      <div class="head-actions">
+        <button id="open-dir-btn" class="btn ghost">Abrir carpeta del juego</button>
+        <button id="download-btn" class="btn ghost">&#8595; Descargar versión</button>
+        <button id="import-btn" class="btn primary">+ Importar mi .jar</button>
+      </div>
+    </div>
+    <ul id="install-list" class="install-list"></ul>
+    <p id="install-empty" class="empty-note">
+      No hay versiones instaladas todavía.<br>
+      Pulsa <b>“Importar mi .jar”</b>, elige el archivo de tu versión comprada y listo.
+    </p>
+  </div>
+</main>
+
+<!-- =========================== AJUSTES =========================== -->
+<main id="page-settings" class="page">
+  <div class="page-inner">
+    <div class="page-head"><h2>Ajustes</h2></div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Memoria RAM</h3>
+        <p>Máximo asignado a Java. Recomendado: 4–8&nbsp;GB.</p>
+      </div>
+      <div class="setting-ctrl ram-ctrl">
+        <input type="range" id="ram-slider" min="1024" max="16384" step="512" value="4096">
+        <span id="ram-value" class="ram-value">4.0 GB</span>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Bloquear servicios de Mojang</h3>
+        <p>Impide que el juego contacte autenticación, sesión y telemetría.
+           Desactívalo solo si necesitas skins online.</p>
+      </div>
+      <div class="setting-ctrl">
+        <label class="switch"><input type="checkbox" id="block-services" checked><span class="knob"></span></label>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Mostrar snapshots</h3>
+        <p>Incluye versiones de desarrollo al importar.</p>
+      </div>
+      <div class="setting-ctrl">
+        <label class="switch"><input type="checkbox" id="show-snapshots"><span class="knob"></span></label>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Ruta de Java</h3>
+        <p id="java-hint">Vacío = detectar automáticamente.</p>
+      </div>
+      <div class="setting-ctrl row">
+        <input type="text" id="java-path" class="text-input" placeholder="auto">
+        <button id="pick-java-btn" class="btn ghost small">Examinar…</button>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Carpeta del juego</h3>
+        <p>Donde viven mundos, versiones y recursos.</p>
+      </div>
+      <div class="setting-ctrl row">
+        <input type="text" id="game-dir" class="text-input">
+        <button id="pick-dir-btn" class="btn ghost small">Examinar…</button>
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Argumentos JVM extra</h3>
+        <p>Opcional, para usuarios avanzados.</p>
+      </div>
+      <div class="setting-ctrl">
+        <input type="text" id="extra-jvm" class="text-input wide" placeholder="-XX:+UseG1GC …">
+      </div>
+    </div>
+
+    <div class="setting">
+      <div class="setting-info">
+        <h3>Actualizaciones</h3>
+        <p>Versión actual: <b id="app-version">–</b>.
+           Comprueba nuevas versiones en un repositorio de GitHub
+           (formato <i>usuario/repositorio</i>, releases con un .zip de actualización).</p>
+      </div>
+      <div class="setting-ctrl row">
+        <input type="text" id="update-repo" class="text-input" placeholder="usuario/repositorio" spellcheck="false">
+        <button id="check-updates-btn" class="btn ghost small">Buscar</button>
+      </div>
+    </div>
+
+    <div class="settings-save-row">
+      <button id="save-settings-btn" class="btn primary">Guardar ajustes</button>
+      <span id="save-note" class="save-note"></span>
+    </div>
+  </div>
+</main>
+
+<!-- ======================= MODAL IMPORTAR ======================== -->
+<div id="modal-import" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>Importar tu versión</h2>
+    <p class="modal-note">Selecciona el <b>.jar</b> de tu copia y dile al launcher qué versión es
+       para descargar sus librerías y recursos (desde los servidores oficiales, sin cuenta).</p>
+
+    <label class="field-label">Archivo .jar</label>
+    <div class="row gap">
+      <input type="text" id="jar-path" class="text-input wide" readonly placeholder="Ningún archivo seleccionado">
+      <button id="pick-jar-btn" class="btn ghost small">Elegir…</button>
+    </div>
+
+    <label class="field-label">¿Qué versión es?</label>
+    <input type="text" id="base-search" class="text-input wide" placeholder="Buscar… (ej. 1.21)" autocomplete="off">
+    <select id="base-version" size="6" class="base-list"></select>
+
+    <label class="field-label">Nombre de la instalación (opcional)</label>
+    <input type="text" id="install-name" class="text-input wide" placeholder="igual que la versión">
+
+    <div class="modal-actions">
+      <button id="import-cancel" class="btn ghost">Cancelar</button>
+      <button id="import-confirm" class="btn primary" disabled>Importar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= MODAL LOG =========================== -->
+<div id="modal-log" class="modal-backdrop hidden">
+  <div class="modal wide">
+    <h2 id="log-title">El juego se cerró con errores</h2>
+    <pre id="log-body" class="log-body"></pre>
+    <div class="modal-actions">
+      <button id="log-close" class="btn primary">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MODAL DESCARGAR VERSIÓN ================== -->
+<div id="modal-download" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2>Descargar versión oficial</h2>
+    <p class="modal-note">Se descarga completa (jar, librerías y recursos) desde los
+       servidores oficiales de Mojang y queda lista para jugar, incluso sin conexión.</p>
+
+    <label class="field-label">Versión</label>
+    <input type="text" id="dl-search" class="text-input wide" placeholder="Buscar… (ej. 1.21)" autocomplete="off">
+    <select id="dl-version" size="8" class="base-list"></select>
+
+    <div class="modal-actions">
+      <button id="dl-cancel" class="btn ghost">Cancelar</button>
+      <button id="dl-confirm" class="btn primary" disabled>Descargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================== MODAL ACTUALIZACIÓN ==================== -->
+<div id="modal-update" class="modal-backdrop hidden">
+  <div class="modal">
+    <h2 id="update-title">Actualización disponible</h2>
+    <p class="modal-note" id="update-sub"></p>
+    <pre id="update-notes" class="log-body hidden"></pre>
+
+    <div id="update-progress" class="update-progress hidden">
+      <div class="progress-text"><span id="update-progress-msg">Descargando…</span><span id="update-progress-count"></span></div>
+      <div class="progress-track"><div id="update-progress-bar" class="progress-bar"></div></div>
+    </div>
+
+    <div class="modal-actions">
+      <button id="update-later" class="btn ghost">Más tarde</button>
+      <button id="update-now" class="btn primary">Actualizar y reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tarjeta de progreso global (descargas / preparación del juego) -->
+<div id="progress-wrap" class="progress-wrap hidden">
+  <div class="progress-text"><span id="progress-msg">Preparando…</span><span id="progress-count"></span></div>
+  <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# Salidas de compilacion
+build/
+dist/
+installer/
+PureLauncher.spec
+
+# Config local del launcher (vive en APPDATA, pero por si acaso)
+config.json
+
+# Ajustes locales de herramientas
+.claude/
