@@ -35,6 +35,20 @@ Notas: la actualización automática solo aplica en la versión instalada (.exe)
 debe ser numérico (`v1.2.0`); el zip debe contener el contenido de `dist\PureLauncher`
 (lo hace `build.bat` solo).
 
+## Restauración (actualizaciones corruptas)
+
+Antes de aplicar cualquier actualización, el launcher guarda una **copia de seguridad
+automática** de la versión actual. Si una actualización sale mal o el launcher deja de
+arrancar, abre **"Restaurar PureLauncher"** desde el menú Inicio (`Restaurar.exe`, una
+herramienta independiente que no depende de los archivos del launcher) y elige:
+
+- **Copia de seguridad local** — vuelve a la versión anterior al instante, sin conexión.
+- **Descargar una versión estable de GitHub** — lista todas las releases publicadas y
+  reinstala la que elijas (la más reciente u otra anterior).
+
+La herramienta cierra el launcher si está abierto, aplica los archivos, respeta el
+desinstalador y ofrece relanzar la app al terminar.
+
 ## Descargar versiones oficiales
 
 En *Instalaciones → “Descargar versión”* puedes bajar cualquier versión del manifiesto

@@ -119,16 +119,32 @@ def stage_zip(zip_path):
 
 # -------------------------------------------------------------------- aplicar
 
+def backup_dir():
+    return os.path.join(
+        os.environ.get("LOCALAPPDATA", tempfile.gettempdir()),
+        "PureLauncher", "backup",
+    )
+
+
 APPLY_BAT = r"""@echo off
 setlocal
 set "STAGE={stage}"
 set "APP={app}"
+set "BAK={bak}"
 :wait
 tasklist /FI "PID eq {pid}" 2>nul | find " {pid} " >nul
 if not errorlevel 1 (
   timeout /t 1 /nobreak >nul
   goto wait
 )
+rem Copia de seguridad de la version actual antes de tocar nada
+if exist "%APP%\_internal" robocopy "%APP%\_internal" "%BAK%\_internal" /MIR /R:2 /W:1 >nul
+if exist "%APP%\{exe}" (
+  if not exist "%BAK%" mkdir "%BAK%" >nul 2>nul
+  copy /y "%APP%\{exe}" "%BAK%\{exe}" >nul
+)
+echo {app_version} %DATE% %TIME% > "%BAK%\backup-info.txt"
+rem Aplicar la actualizacion
 if exist "%STAGE%\_internal" robocopy "%STAGE%\_internal" "%APP%\_internal" /MIR /R:3 /W:1 >nul
 robocopy "%STAGE%" "%APP%" /E /XD _internal /R:3 /W:1 >nul
 rd /s /q "%STAGE%" >nul 2>nul
@@ -151,7 +167,8 @@ def launch_applier(stage_dir, app_dir=None, exe_name="PureLauncher.exe", pid=Non
     bat = os.path.join(tempfile.gettempdir(), "purelauncher-apply-update.bat")
     with open(bat, "w", encoding="ascii", errors="replace") as f:
         f.write(APPLY_BAT.format(stage=stage_dir, app=app_dir,
-                                 pid=pid or os.getpid(), exe=exe_name))
+                                 pid=pid or os.getpid(), exe=exe_name,
+                                 bak=backup_dir(), app_version=APP_VERSION))
     flags = subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
     subprocess.Popen(["cmd", "/c", bat], creationflags=flags, close_fds=True)
     return bat

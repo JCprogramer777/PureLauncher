@@ -197,6 +197,7 @@ const UI = {
     $("extra-jvm").value = cfg.extra_jvm || "";
     $("app-version").textContent =
       this.state.appVersion + (this.state.isInstalled ? "" : " (desarrollo)");
+    $("side-version").textContent = "v" + this.state.appVersion;
   },
 
   async loadRemoteVersions() {

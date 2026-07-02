@@ -8,188 +8,200 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">
-    <img class="logo-img" src="logo.svg" alt="" draggable="false">
-    <span class="brand-name"><b>PURE</b>LAUNCHER</span>
-  </div>
-  <nav class="tabs">
-    <button class="tab active" data-page="play">Jugar</button>
-    <button class="tab" data-page="installs">Instalaciones</button>
-    <button class="tab" data-page="settings">Ajustes</button>
-  </nav>
-  <div class="top-right">
-    <span class="badge-notrack" title="Este launcher no envía datos a nadie. Los servicios de Mojang se bloquean al lanzar el juego.">
-      &#128274; Sin telemetría
-    </span>
-  </div>
-</header>
-
-<!-- ============================ JUGAR ============================ -->
-<main id="page-play" class="page active">
-  <section class="hero">
-    <div class="hero-art"></div>
-    <div class="hero-content">
-      <img class="hero-logo" src="logo.svg" alt="PureLauncher" draggable="false">
-      <h1 class="wordmark"><b>PURE</b> LAUNCHER</h1>
-      <p id="hero-sub">Rápido, limpio y sin telemetría. Tu juego, tus reglas.</p>
-    </div>
-  </section>
-
-  <footer class="playbar">
-    <div class="playbar-side left">
-      <label class="mini-label">Versión</label>
-      <select id="version-select" class="version-select">
-        <option value="">— importa una versión —</option>
-      </select>
-    </div>
-    <button id="play-btn" class="play-btn" disabled>
-      <span class="play-label">JUGAR</span>
-      <span class="play-sub" id="play-sub"></span>
+<!-- ========================== SIDEBAR ============================ -->
+<aside class="sidebar">
+  <img class="side-logo" src="logo.svg" alt="PureLauncher" draggable="false">
+  <nav class="side-nav">
+    <button class="tab active" data-page="play" title="Jugar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4.5v15l13-7.5z" fill="currentColor" stroke="none"/></svg>
+      <span>Jugar</span>
     </button>
-    <div class="playbar-side right">
-      <label class="mini-label" for="username">Nombre de jugador</label>
-      <div class="user-row">
-        <div class="steve" aria-hidden="true"></div>
-        <input id="username" maxlength="16" spellcheck="false" autocomplete="off" placeholder="Jugador">
-      </div>
-    </div>
-  </footer>
-</main>
-
-<!-- ======================== INSTALACIONES ======================== -->
-<main id="page-installs" class="page">
-  <div class="page-inner">
-    <div class="page-head">
-      <h2>Instalaciones</h2>
-      <div class="head-actions">
-        <button id="open-dir-btn" class="btn ghost">Abrir carpeta del juego</button>
-        <button id="download-btn" class="btn ghost">&#8595; Descargar versión</button>
-        <button id="import-btn" class="btn primary">+ Importar mi .jar</button>
-      </div>
-    </div>
-    <ul id="install-list" class="install-list"></ul>
-    <p id="install-empty" class="empty-note">
-      No hay versiones instaladas todavía.<br>
-      Pulsa <b>“Importar mi .jar”</b>, elige el archivo de tu versión comprada y listo.
-    </p>
+    <button class="tab" data-page="installs" title="Instalaciones">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
+      <span>Versiones</span>
+    </button>
+    <button class="tab" data-page="settings" title="Ajustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+  <div class="side-bottom">
+    <span class="ver-chip" id="side-version" title="Versión del launcher">v–</span>
   </div>
-</main>
+</aside>
 
-<!-- =========================== AJUSTES =========================== -->
-<main id="page-settings" class="page">
-  <div class="page-inner">
-    <div class="page-head"><h2>Ajustes</h2></div>
+<!-- =========================== CONTENIDO ========================= -->
+<div class="shell">
 
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Memoria RAM</h3>
-        <p>Máximo asignado a Java. Recomendado: 4–8&nbsp;GB.</p>
+  <!-- ============================ JUGAR ========================== -->
+  <main id="page-play" class="page active">
+    <section class="hero">
+      <div class="hero-art"></div>
+      <span class="badge-notrack" title="Este launcher no envía datos a nadie. Los servicios de Mojang se bloquean al lanzar el juego.">&#128274; Sin telemetría</span>
+      <div class="hero-content">
+        <img class="hero-logo" src="logo.svg" alt="PureLauncher" draggable="false">
+        <h1 class="wordmark"><b>PURE</b> LAUNCHER</h1>
+        <p id="hero-sub">Rápido, limpio y sin telemetría. Tu juego, tus reglas.</p>
       </div>
-      <div class="setting-ctrl ram-ctrl">
-        <input type="range" id="ram-slider" min="1024" max="16384" step="512" value="4096">
-        <span id="ram-value" class="ram-value">4.0 GB</span>
-        <button id="ram-auto-btn" class="btn ghost small" title="Ajustar según la RAM de este equipo">Auto</button>
+
+      <footer class="playbar glass">
+        <div class="playbar-side left">
+          <label class="mini-label">Versión</label>
+          <select id="version-select" class="version-select">
+            <option value="">— importa una versión —</option>
+          </select>
+        </div>
+        <button id="play-btn" class="play-btn" disabled>
+          <span class="play-label">JUGAR</span>
+          <span class="play-sub" id="play-sub"></span>
+        </button>
+        <div class="playbar-side right">
+          <label class="mini-label" for="username">Nombre de jugador</label>
+          <div class="user-row">
+            <div class="steve" aria-hidden="true"></div>
+            <input id="username" maxlength="16" spellcheck="false" autocomplete="off" placeholder="Jugador">
+          </div>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <!-- ======================== INSTALACIONES ====================== -->
+  <main id="page-installs" class="page">
+    <div class="page-inner">
+      <div class="page-head">
+        <h2>Instalaciones</h2>
+        <div class="head-actions">
+          <button id="open-dir-btn" class="btn ghost">Abrir carpeta del juego</button>
+          <button id="download-btn" class="btn ghost">&#8595; Descargar versión</button>
+          <button id="import-btn" class="btn primary">+ Importar mi .jar</button>
+        </div>
+      </div>
+      <ul id="install-list" class="install-list"></ul>
+      <p id="install-empty" class="empty-note">
+        No hay versiones instaladas todavía.<br>
+        Pulsa <b>“Importar mi .jar”</b> o <b>“Descargar versión”</b> para empezar.
+      </p>
+    </div>
+  </main>
+
+  <!-- =========================== AJUSTES ========================= -->
+  <main id="page-settings" class="page">
+    <div class="page-inner">
+      <div class="page-head"><h2>Ajustes</h2></div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Memoria RAM</h3>
+          <p>Máximo asignado a Java. Recomendado: 4–8&nbsp;GB.</p>
+        </div>
+        <div class="setting-ctrl ram-ctrl">
+          <input type="range" id="ram-slider" min="1024" max="16384" step="512" value="4096">
+          <span id="ram-value" class="ram-value">4.0 GB</span>
+          <button id="ram-auto-btn" class="btn ghost small" title="Ajustar según la RAM de este equipo">Auto</button>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Optimización del juego</h3>
+          <p>Afina la máquina virtual de Java (recolector G1 estilo Aikar) para
+             menos tirones y mejor rendimiento. <i>Máxima</i> reserva toda la RAM
+             al arrancar: más fluidez a cambio de un arranque algo más lento.</p>
+        </div>
+        <div class="setting-ctrl">
+          <select id="opt-level" class="version-select" style="min-width:180px">
+            <option value="off">Desactivada</option>
+            <option value="balanced">Equilibrada</option>
+            <option value="max">Máxima</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Prioridad alta del juego</h3>
+          <p>Ejecuta el juego con prioridad de CPU por encima de lo normal.</p>
+        </div>
+        <div class="setting-ctrl">
+          <label class="switch"><input type="checkbox" id="high-priority" checked><span class="knob"></span></label>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Bloquear servicios de Mojang</h3>
+          <p>Impide que el juego contacte autenticación, sesión y telemetría.
+             Desactívalo solo si necesitas skins online.</p>
+        </div>
+        <div class="setting-ctrl">
+          <label class="switch"><input type="checkbox" id="block-services" checked><span class="knob"></span></label>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Mostrar snapshots</h3>
+          <p>Incluye versiones de desarrollo al importar o descargar.</p>
+        </div>
+        <div class="setting-ctrl">
+          <label class="switch"><input type="checkbox" id="show-snapshots"><span class="knob"></span></label>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Ruta de Java</h3>
+          <p id="java-hint">Vacío = detectar automáticamente.</p>
+        </div>
+        <div class="setting-ctrl row">
+          <input type="text" id="java-path" class="text-input" placeholder="auto">
+          <button id="pick-java-btn" class="btn ghost small">Examinar…</button>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Carpeta del juego</h3>
+          <p>Donde viven mundos, versiones y recursos.</p>
+        </div>
+        <div class="setting-ctrl row">
+          <input type="text" id="game-dir" class="text-input">
+          <button id="pick-dir-btn" class="btn ghost small">Examinar…</button>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Argumentos JVM extra</h3>
+          <p>Opcional, para usuarios avanzados.</p>
+        </div>
+        <div class="setting-ctrl">
+          <input type="text" id="extra-jvm" class="text-input wide" placeholder="-XX:+UseG1GC …">
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Actualizaciones</h3>
+          <p>Versión actual: <b id="app-version">–</b>.
+             Al arrancar se comprueba automáticamente si hay una versión nueva;
+             también puedes comprobarlo ahora. Si una actualización sale mal,
+             usa <b>Restaurar PureLauncher</b> desde el menú Inicio.</p>
+        </div>
+        <div class="setting-ctrl">
+          <button id="check-updates-btn" class="btn ghost small">Buscar actualizaciones</button>
+        </div>
+      </div>
+
+      <div class="settings-save-row">
+        <button id="save-settings-btn" class="btn primary">Guardar ajustes</button>
+        <span id="save-note" class="save-note"></span>
       </div>
     </div>
+  </main>
 
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Optimización del juego</h3>
-        <p>Afina la máquina virtual de Java (recolector G1 estilo Aikar) para
-           menos tirones y mejor rendimiento. <i>Máxima</i> reserva toda la RAM
-           al arrancar: más fluidez a cambio de un arranque algo más lento.</p>
-      </div>
-      <div class="setting-ctrl">
-        <select id="opt-level" class="version-select" style="min-width:180px">
-          <option value="off">Desactivada</option>
-          <option value="balanced">Equilibrada</option>
-          <option value="max">Máxima</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Prioridad alta del juego</h3>
-        <p>Ejecuta el juego con prioridad de CPU por encima de lo normal.</p>
-      </div>
-      <div class="setting-ctrl">
-        <label class="switch"><input type="checkbox" id="high-priority" checked><span class="knob"></span></label>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Bloquear servicios de Mojang</h3>
-        <p>Impide que el juego contacte autenticación, sesión y telemetría.
-           Desactívalo solo si necesitas skins online.</p>
-      </div>
-      <div class="setting-ctrl">
-        <label class="switch"><input type="checkbox" id="block-services" checked><span class="knob"></span></label>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Mostrar snapshots</h3>
-        <p>Incluye versiones de desarrollo al importar.</p>
-      </div>
-      <div class="setting-ctrl">
-        <label class="switch"><input type="checkbox" id="show-snapshots"><span class="knob"></span></label>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Ruta de Java</h3>
-        <p id="java-hint">Vacío = detectar automáticamente.</p>
-      </div>
-      <div class="setting-ctrl row">
-        <input type="text" id="java-path" class="text-input" placeholder="auto">
-        <button id="pick-java-btn" class="btn ghost small">Examinar…</button>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Carpeta del juego</h3>
-        <p>Donde viven mundos, versiones y recursos.</p>
-      </div>
-      <div class="setting-ctrl row">
-        <input type="text" id="game-dir" class="text-input">
-        <button id="pick-dir-btn" class="btn ghost small">Examinar…</button>
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Argumentos JVM extra</h3>
-        <p>Opcional, para usuarios avanzados.</p>
-      </div>
-      <div class="setting-ctrl">
-        <input type="text" id="extra-jvm" class="text-input wide" placeholder="-XX:+UseG1GC …">
-      </div>
-    </div>
-
-    <div class="setting">
-      <div class="setting-info">
-        <h3>Actualizaciones</h3>
-        <p>Versión actual: <b id="app-version">–</b>.
-           Al arrancar se comprueba automáticamente si hay una versión nueva;
-           también puedes comprobarlo ahora.</p>
-      </div>
-      <div class="setting-ctrl">
-        <button id="check-updates-btn" class="btn ghost small">Buscar actualizaciones</button>
-      </div>
-    </div>
-
-    <div class="settings-save-row">
-      <button id="save-settings-btn" class="btn primary">Guardar ajustes</button>
-      <span id="save-note" class="save-note"></span>
-    </div>
-  </div>
-</main>
+</div>
 
 <!-- ======================= MODAL IMPORTAR ======================== -->
 <div id="modal-import" class="modal-backdrop hidden">
@@ -214,17 +226,6 @@
     <div class="modal-actions">
       <button id="import-cancel" class="btn ghost">Cancelar</button>
       <button id="import-confirm" class="btn primary" disabled>Importar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================= MODAL LOG =========================== -->
-<div id="modal-log" class="modal-backdrop hidden">
-  <div class="modal wide">
-    <h2 id="log-title">El juego se cerró con errores</h2>
-    <pre id="log-body" class="log-body"></pre>
-    <div class="modal-actions">
-      <button id="log-close" class="btn primary">Cerrar</button>
     </div>
   </div>
 </div>
@@ -262,6 +263,17 @@
     <div class="modal-actions">
       <button id="update-later" class="btn ghost">Más tarde</button>
       <button id="update-now" class="btn primary">Actualizar y reiniciar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================= MODAL LOG =========================== -->
+<div id="modal-log" class="modal-backdrop hidden">
+  <div class="modal wide">
+    <h2 id="log-title">El juego se cerró con errores</h2>
+    <pre id="log-body" class="log-body"></pre>
+    <div class="modal-actions">
+      <button id="log-close" class="btn primary">Cerrar</button>
     </div>
   </div>
 </div>
