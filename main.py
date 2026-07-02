@@ -29,7 +29,7 @@ DEFAULT_CONFIG = {
     "keep_open": True,
     "last_version": "",
     "resolution": None,
-    "update_repo": "",
+    "update_repo": "JCprogramer777/PureLauncher",
     "auto_check_updates": True,
 }
 
