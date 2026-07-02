@@ -10,16 +10,16 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['cryptography', 'unittest', 'pydoc', 'doctest', 'xmlrpc', 'lib2to3', 'sqlite3', 'test'],
     noarchive=False,
-    optimize=0,
+    optimize=2,
 )
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
-    [],
+    [('O', None, 'OPTION'), ('O', None, 'OPTION')],
     exclude_binaries=True,
     name='Restaurar',
     debug=False,

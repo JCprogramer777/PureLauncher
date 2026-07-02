@@ -36,6 +36,7 @@ DEFAULT_CONFIG = {
     "auto_check_updates": True,
     "opt_level": "balanced",
     "high_priority": True,
+    "lite_mode": "auto",
 }
 
 
@@ -400,6 +401,15 @@ def _close_splash():
 
 def main():
     api = Api()
+    # Frena el apetito de RAM de WebView2 en equipos modestos: limita el
+    # cache en disco y, en modo ligero, los procesos de render.
+    flags = ["--disk-cache-size=33554432"]
+    lite = api.config.get("lite_mode", "auto")
+    if lite == "on" or (lite != "off" and (os.cpu_count() or 8) <= 4):
+        flags += ["--renderer-process-limit=1", "--enable-low-end-device-mode"]
+    os.environ.setdefault(
+        "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", " ".join(flags)
+    )
     window = webview.create_window(
         "PureLauncher",
         url=os.path.join(RES_DIR, "ui", "index.html"),
@@ -410,7 +420,14 @@ def main():
         background_color="#17171c",
     )
     api.window = window
-    webview.start(_close_splash, debug="--debug" in sys.argv)
+    # Perfil persistente de WebView2: la cache va a disco en vez de a RAM
+    # (importante en equipos con poca memoria) y acelera cargas siguientes.
+    webview.start(
+        _close_splash,
+        debug="--debug" in sys.argv,
+        private_mode=False,
+        storage_path=os.path.join(CONFIG_DIR, "webview"),
+    )
 
 
 if __name__ == "__main__":

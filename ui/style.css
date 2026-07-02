@@ -569,6 +569,35 @@ body {
 
 .hidden { display: none !important; }
 
+/* ------------------------------------------------ modo ligero (equipos modestos) */
+/* Apaga lo que mas cuesta componer en una iGPU debil: desenfoques en tiempo
+   real, animaciones continuas y sombras/glows grandes. */
+body.lite .hero-art::before,
+body.lite .hero-art::after { display: none; }
+body.lite .hero-logo { animation: none; filter: none; }
+body.lite .side-logo { filter: none; }
+body.lite .side-logo:hover { transform: none; }
+body.lite .playbar,
+body.lite .badge-notrack,
+body.lite .progress-wrap,
+body.lite .modal-backdrop,
+body.lite .toast { backdrop-filter: none; }
+body.lite .playbar { background: rgba(13, 17, 22, .96); }
+body.lite .modal-backdrop { background: rgba(4, 6, 9, .8); }
+body.lite .play-btn,
+body.lite .btn.primary,
+body.lite .progress-bar,
+body.lite .install-item,
+body.lite .skin-card,
+body.lite .skin-card canvas,
+body.lite .steve,
+body.lite .modal,
+body.lite .toast { box-shadow: none; filter: none; }
+body.lite .page.active,
+body.lite .modal,
+body.lite .toast { animation: none; }
+body.lite * { transition-duration: 0s !important; }
+
 /* Ventanas estrechas: la tarjeta de juego se apila */
 @media (max-width: 900px) {
   .playbar {

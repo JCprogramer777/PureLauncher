@@ -187,6 +187,8 @@ const UI = {
     // ajustes
     $("ram-slider").value = cfg.ram_mb;
     updateRamLabel();
+    $("lite-mode").value = cfg.lite_mode || "auto";
+    applyLiteMode(cfg.lite_mode || "auto");
     $("opt-level").value = cfg.opt_level || "balanced";
     $("high-priority").checked = cfg.high_priority !== false;
     $("block-services").checked = cfg.block_services;
@@ -244,6 +246,22 @@ function updateRamLabel() {
   const gb = ($("ram-slider").value / 1024).toFixed(1);
   $("ram-value").textContent = gb + " GB";
 }
+
+function applyLiteMode(mode) {
+  // "auto": activa el modo ligero en equipos modestos (p. ej. Intel N100:
+  // 4 nucleos) o si el usuario prefiere menos movimiento.
+  const weakCpu = (navigator.hardwareConcurrency || 8) <= 4;
+  const lowRam = (navigator.deviceMemory || 8) < 8;
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const lite = mode === "on" || (mode !== "off" && (weakCpu || lowRam || reduced));
+  document.body.classList.toggle("lite", lite);
+  try { localStorage.setItem("pl-lite", lite ? "1" : "0"); } catch (e) {}
+}
+
+// Aplica el ultimo valor conocido al instante (antes de recibir el estado).
+try {
+  if (localStorage.getItem("pl-lite") === "1") document.body.classList.add("lite");
+} catch (e) {}
 
 function renderVersionList(listEl, filter, onDone) {
   listEl.innerHTML = "";
@@ -569,6 +587,7 @@ function wire() {
   $("save-settings-btn").onclick = async () => {
     await pywebview.api.save_settings({
       ram_mb: parseInt($("ram-slider").value, 10),
+      lite_mode: $("lite-mode").value,
       opt_level: $("opt-level").value,
       high_priority: $("high-priority").checked,
       block_services: $("block-services").checked,
