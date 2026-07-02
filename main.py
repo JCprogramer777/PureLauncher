@@ -29,7 +29,6 @@ DEFAULT_CONFIG = {
     "keep_open": True,
     "last_version": "",
     "resolution": None,
-    "update_repo": "JCprogramer777/PureLauncher",
     "auto_check_updates": True,
 }
 
@@ -91,14 +90,13 @@ class Api:
         }
 
     def _auto_check_updates(self):
-        if (self._auto_checked or not self.config.get("auto_check_updates")
-                or not self.config.get("update_repo")):
+        if self._auto_checked or not self.config.get("auto_check_updates"):
             return
         self._auto_checked = True
 
         def work():
             try:
-                info = updater.check_update(self.config["update_repo"])
+                info = updater.check_update()
                 if info:
                     self._pending_update = info
                     self._emit("updateAvailable", info)
@@ -109,7 +107,7 @@ class Api:
 
     def check_updates(self):
         try:
-            info = updater.check_update(self.config.get("update_repo"))
+            info = updater.check_update()
             self._pending_update = info
             return {"ok": True, "update": info, "current": updater.APP_VERSION}
         except Exception as e:  # noqa: BLE001

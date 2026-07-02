@@ -22,7 +22,9 @@ import tempfile
 import zipfile
 from urllib.request import Request, urlopen
 
-APP_VERSION = "1.1.0"
+APP_VERSION = "1.1.1"
+# Repositorio oficial de actualizaciones (fijo, no configurable por el usuario).
+UPDATE_REPO = "JCprogramer777/PureLauncher"
 USER_AGENT = f"PureLauncher/{APP_VERSION}"
 
 
@@ -50,11 +52,9 @@ def install_dir():
 
 # ------------------------------------------------------------------ comprobar
 
-def check_update(repo):
+def check_update(repo=None):
     """Devuelve info de la actualizacion o None si ya estamos al dia."""
-    repo = (repo or "").strip().strip("/")
-    if not re.fullmatch(r"[\w.-]+/[\w.-]+", repo):
-        raise ValueError("Repositorio no valido. Usa el formato usuario/repositorio.")
+    repo = repo or UPDATE_REPO
     data = json.loads(_get(f"https://api.github.com/repos/{repo}/releases/latest"))
     tag = str(data.get("tag_name", ""))
     if parse_version(tag) <= parse_version(APP_VERSION):

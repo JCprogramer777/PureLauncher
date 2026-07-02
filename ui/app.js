@@ -193,7 +193,6 @@ const UI = {
     $("java-path").placeholder = this.state.javaDetected || "auto";
     $("game-dir").value = cfg.game_dir;
     $("extra-jvm").value = cfg.extra_jvm || "";
-    $("update-repo").value = cfg.update_repo || "";
     $("app-version").textContent =
       this.state.appVersion + (this.state.isInstalled ? "" : " (desarrollo)");
   },
@@ -367,12 +366,6 @@ function wire() {
 
   // actualizaciones
   $("check-updates-btn").onclick = async () => {
-    const repo = $("update-repo").value.trim();
-    await pywebview.api.save_settings({ update_repo: repo });
-    if (!repo) {
-      toast("Escribe primero tu repositorio (usuario/repositorio).");
-      return;
-    }
     $("check-updates-btn").disabled = true;
     const res = await pywebview.api.check_updates();
     $("check-updates-btn").disabled = false;

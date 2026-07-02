@@ -16,9 +16,10 @@ Para regenerar el instalador tras cambiar el código: `build.bat`
 
 El launcher puede actualizarse solo desde un repositorio de GitHub:
 
-1. **Repositorio**: por defecto apunta a
-   [`JCprogramer777/PureLauncher`](https://github.com/JCprogramer777/PureLauncher)
-   (cambiable en *Ajustes → Actualizaciones*, formato `usuario/repositorio`).
+1. **Repositorio**: fijo en el código
+   ([`JCprogramer777/PureLauncher`](https://github.com/JCprogramer777/PureLauncher),
+   constante `UPDATE_REPO` en `updater.py`). El usuario no puede cambiarlo; solo
+   dispone del botón *Buscar actualizaciones* en Ajustes.
 2. **Publica una versión nueva**:
    - Sube la versión en `updater.py` (`APP_VERSION = "1.2.0"`).
    - Ejecuta `build.bat` → genera `installer\PureLauncher-Update-1.2.0.zip`.
