@@ -7,6 +7,10 @@ build/
 dist/
 installer/
 PureLauncher.spec
+Restaurar.spec
+version_launcher.txt
+version_restore.txt
+*.pfx
 
 # Config local del launcher (vive en APPDATA, pero por si acaso)
 config.json

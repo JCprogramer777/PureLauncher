@@ -84,6 +84,7 @@ def kill_launcher():
 def apply_tree(src, status):
     """Copia src sobre APP_DIR (sin tocar esta herramienta ni el desinstalador)."""
     status("Aplicando archivos...")
+    skip = {"_internal", "restore-tool", SELF_NAME.lower()}
     src_internal = os.path.join(src, "_internal")
     dst_internal = os.path.join(APP_DIR, "_internal")
     if os.path.isdir(src_internal):
@@ -91,7 +92,7 @@ def apply_tree(src, status):
             shutil.rmtree(dst_internal)
         shutil.copytree(src_internal, dst_internal)
     for name in os.listdir(src):
-        if name == "_internal" or name.lower() == SELF_NAME.lower():
+        if name.lower() in skip:
             continue
         full = os.path.join(src, name)
         if os.path.isfile(full):

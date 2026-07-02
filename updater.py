@@ -22,7 +22,7 @@ import tempfile
 import zipfile
 from urllib.request import Request, urlopen
 
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.3.1"
 # Repositorio oficial de actualizaciones (fijo, no configurable por el usuario).
 UPDATE_REPO = "JCprogramer777/PureLauncher"
 USER_AGENT = f"PureLauncher/{APP_VERSION}"

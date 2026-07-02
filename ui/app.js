@@ -198,8 +198,6 @@ const UI = {
     $("app-version").textContent =
       this.state.appVersion + (this.state.isInstalled ? "" : " (desarrollo)");
     $("side-version").textContent = "v" + this.state.appVersion;
-
-    Skins.refreshList();
   },
 
   async loadRemoteVersions() {
@@ -235,6 +233,11 @@ function switchPage(name) {
   document.querySelectorAll(".page").forEach((p) =>
     p.classList.toggle("active", p.id === "page-" + name)
   );
+  // La biblioteca de skins solo se (re)dibuja al entrar en su pestaña.
+  if (name === "skins" && window.pywebview && !Skins.loaded) {
+    Skins.loaded = true;
+    Skins.refreshList();
+  }
 }
 
 function updateRamLabel() {
@@ -295,6 +298,7 @@ function validateImport() {
 
 const Skins = {
   pendingCanvas: null, // skin normalizada 64x64 lista para guardar
+  loaded: false,
 
   // Convierte cualquier fuente a un canvas 64x64 (incluye skins antiguas 64x32).
   async normalize(dataUrl) {

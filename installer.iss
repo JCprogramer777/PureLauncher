@@ -11,7 +11,11 @@
 AppId={{7C2D9A41-6B8E-4F5A-9D3C-PURELAUNCH01}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-AppPublisher=PureLauncher
+AppPublisher=Pure Studios
+VersionInfoCompany=Pure Studios
+VersionInfoProductName=PureLauncher
+VersionInfoVersion={#MyAppVersion}
+VersionInfoCopyright=(c) Pure Studios
 DefaultDirName={localappdata}\Programs\{#MyAppName}
 DisableProgramGroupPage=yes
 ; Instalacion por usuario: no requiere permisos de administrador.
@@ -32,11 +36,11 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "dist\PureLauncher\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "dist\Restaurar.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\Restaurar\*"; DestDir: "{app}\restore-tool"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autoprograms}\Restaurar {#MyAppName}"; Filename: "{app}\Restaurar.exe"
+Name: "{autoprograms}\Restaurar {#MyAppName}"; Filename: "{app}\restore-tool\Restaurar.exe"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]

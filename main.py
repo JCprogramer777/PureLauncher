@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import threading
+import time
 
 import webview
 
@@ -70,6 +71,12 @@ class Api:
         return self._launcher_obj
 
     def _progress(self, stage, done, total, msg):
+        # Estrangula los eventos intermedios: cada evaluate_js cruza al hilo
+        # de la interfaz y cientos por segundo la ahogan durante descargas.
+        now = time.monotonic()
+        if done not in (0, total) and now - getattr(self, "_last_prog", 0.0) < 0.1:
+            return
+        self._last_prog = now
         payload = json.dumps(
             {"stage": stage, "done": done, "total": total, "msg": msg}
         )
@@ -357,8 +364,12 @@ class Api:
                 code = self.process.wait()
                 tail = ""
                 try:
-                    with open(log_path, encoding="utf-8", errors="replace") as f:
-                        tail = "".join(f.readlines()[-40:])
+                    # Solo los ultimos KB: los logs del juego pueden ser enormes.
+                    with open(log_path, "rb") as f:
+                        f.seek(0, os.SEEK_END)
+                        f.seek(max(0, f.tell() - 8192))
+                        raw = f.read().decode("utf-8", "replace")
+                    tail = "\n".join(raw.splitlines()[-40:])
                 except OSError:
                     pass
                 self.process = None

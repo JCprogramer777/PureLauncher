@@ -77,6 +77,19 @@ versión **desde los CDN oficiales de Mojang** — es inevitable, el juego no ar
 ellos — pero sin iniciar sesión ni enviar ningún dato tuyo. Después de eso, todo queda
 en caché y puedes jugar sin conexión.
 
+## Antivirus y firma
+
+Los binarios van **firmados por "Pure Studios"** (certificado propio) con sello de
+tiempo de DigiCert, e incluyen metadatos completos de versión (empresa, producto,
+copyright) — todo esto reduce mucho los falsos positivos heurísticos de los antivirus,
+habituales en apps empaquetadas con PyInstaller. La herramienta de restauración dejó
+de ser *onefile* (el formato que más falsos positivos genera).
+
+Si algún antivirus aún lo marca: es un falso positivo (el código es público en este
+repositorio); añade una exclusión o repórtalo como falso positivo al fabricante.
+Al ser un certificado autofirmado, Windows puede seguir mostrando "editor desconocido"
+en SmartScreen — eliminarlo del todo requiere un certificado de pago de una CA (OV/EV).
+
 ## Privacidad
 
 - El launcher **no tiene cuentas, analítica ni rastreo de ningún tipo**.
