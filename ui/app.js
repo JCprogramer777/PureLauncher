@@ -48,6 +48,16 @@ const UI = {
         this.hideProgress();
         toast("Error al lanzar: " + data.error);
         break;
+      case "javaDone":
+        this.hideProgress();
+        if (data.ok) {
+          toast(`Java instalado correctamente (${data.name}).`, true);
+          this.refresh();
+        } else {
+          toast("Error al instalar Java: " + data.error);
+        }
+        $("install-java-btn").disabled = false;
+        break;
       case "importDone":
         this.hideProgress();
         if (data.ok) {
@@ -112,11 +122,11 @@ const UI = {
     btn.classList.toggle("busy", mode !== "idle");
     if (mode === "running") {
       label.textContent = "JUGANDO";
-      $("play-sub").textContent = "clic para cerrar el juego";
+      $("play-sub").textContent = "clic para cerrar";
       btn.disabled = false;
     } else if (mode === "preparing") {
       label.textContent = "PREPARANDO…";
-      $("play-sub").textContent = "";
+      $("play-sub").textContent = "descargando datos";
       btn.disabled = true;
     } else {
       label.textContent = "JUGAR";
@@ -127,7 +137,28 @@ const UI = {
 
   updatePlaySub() {
     const v = $("version-select").value;
-    $("play-sub").textContent = v ? "Minecraft " + v : "";
+    $("hero-title").textContent = v ? "Minecraft " + v : "Minecraft";
+    $("play-sub").textContent = v ? "listo para jugar" : "añade una versión";
+  },
+
+  async refreshProfileSkin() {
+    try {
+      const list = await pywebview.api.list_skins();
+      const active = list.find((s) => s.active);
+      const canvas = $("profile-skin");
+      if (!active) {
+        canvas.classList.add("hidden");
+        $("profile-fallback").classList.remove("hidden");
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        Skins.render(canvas, img, active.variant === "slim");
+        canvas.classList.remove("hidden");
+        $("profile-fallback").classList.add("hidden");
+      };
+      img.src = active.dataUrl;
+    } catch (e) { /* sin skin: se queda el logo */ }
   },
 
   // ------------------------------------------------------------------ estado
@@ -195,11 +226,22 @@ const UI = {
     $("show-snapshots").checked = cfg.show_snapshots;
     $("java-path").value = cfg.java_path || "";
     $("java-path").placeholder = this.state.javaDetected || "auto";
+    const js = $("java-status");
+    if (this.state.javaDetected) {
+      js.textContent = "Java detectado: " + this.state.javaDetected;
+      js.className = "ok";
+    } else {
+      js.textContent = "⚠ No se detectó Java en este equipo — el juego no " +
+        "puede arrancar sin él. Instálalo con un clic:";
+      js.className = "bad";
+    }
     $("game-dir").value = cfg.game_dir;
     $("extra-jvm").value = cfg.extra_jvm || "";
     $("app-version").textContent =
       this.state.appVersion + (this.state.isInstalled ? "" : " (desarrollo)");
     $("side-version").textContent = "v" + this.state.appVersion;
+
+    this.refreshProfileSkin();
   },
 
   async loadRemoteVersions() {
@@ -516,6 +558,22 @@ function wire() {
 
   $("open-dir-btn").onclick = () => pywebview.api.open_game_dir();
 
+  // accesos rápidos del panel principal
+  $("sc-download").onclick = () => $("download-btn").click();
+  $("sc-import").onclick = () => $("import-btn").click();
+  $("sc-skins").onclick = () => switchPage("skins");
+  $("sc-folder").onclick = () => pywebview.api.open_game_dir();
+
+  // java
+  $("install-java-btn").onclick = async () => {
+    $("install-java-btn").disabled = true;
+    const res = await pywebview.api.install_java();
+    if (!res.ok) {
+      toast(res.error);
+      $("install-java-btn").disabled = false;
+    }
+  };
+
   // descargar versión oficial
   $("download-btn").onclick = async () => {
     $("dl-search").value = "";
@@ -659,15 +717,51 @@ function wire() {
   };
 }
 
-window.addEventListener("pywebviewready", () => {
-  wire();
-  UI.refresh();
-});
+// ------------------------------------------------------------------ arranque
+// La primera llamada al puente puede perderse si pywebviewready llega antes
+// de que el canal de mensajes esté listo (carrera vista en 1.3.3): la
+// inicialización reintenta con timeout hasta que el estado carga de verdad.
 
-// Fallback por si el evento ya se disparó antes de cargar el script.
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.pywebview && window.pywebview.api) {
-    wire();
-    UI.refresh();
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+  ]);
+}
+
+function bridgeReady() {
+  const api = window.pywebview && window.pywebview.api;
+  return !!(api && typeof api.get_state === "function");
+}
+
+let bootStarted = false;
+let wired = false;
+async function boot() {
+  if (bootStarted) return;
+  bootStarted = true;
+  if (!wired) { wired = true; wire(); }
+  for (let i = 0; i < 200 && !UI.state; i++) {
+    if (bridgeReady()) {
+      try {
+        await withTimeout(UI.refresh(), 4000);
+        if (UI.state) return;
+      } catch (e) {
+        window.__bootErr = String(e && (e.stack || e.message) || e);
+      }
+    }
+    window.__bootTries = i + 1;
+    await new Promise((r) => setTimeout(r, 350));
   }
-});
+}
+
+window.addEventListener("pywebviewready", boot);
+document.addEventListener("DOMContentLoaded", boot);
+// Vigilante: si por cualquier carrera el estado sigue sin cargar, reintenta
+// (las llamadas tardías al puente siempre acaban funcionando).
+const stateWatch = setInterval(() => {
+  if (UI.state) { clearInterval(stateWatch); return; }
+  if (bridgeReady()) {
+    if (!wired) { wired = true; wire(); }
+    UI.refresh().catch(() => {});
+  }
+}, 2000);

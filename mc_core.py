@@ -11,6 +11,7 @@ import json
 import os
 import platform
 import re
+import shlex
 import shutil
 import subprocess
 import threading
@@ -530,7 +531,10 @@ class Launcher:
                 cmd.append(f"-Dminecraft.api.{svc}.host=https://0.0.0.0")
             cmd.append("-Dminecraft.api.env=custom")
         if extra_jvm.strip():
-            cmd.extend(extra_jvm.split())
+            try:
+                cmd.extend(shlex.split(extra_jvm, posix=False))
+            except ValueError:
+                cmd.extend(extra_jvm.split())
 
         args = vdata.get("arguments")
         if args:
@@ -562,7 +566,7 @@ class Launcher:
 
 
 def find_java():
-    """Busca javaw.exe (sin consola) o java en el PATH / JAVA_HOME."""
+    """Busca javaw.exe (sin consola) o java. Devuelve None si no hay Java."""
     java_home = os.environ.get("JAVA_HOME")
     if java_home:
         cand = os.path.join(java_home, "bin", "javaw.exe")
@@ -572,4 +576,4 @@ def find_java():
         found = shutil.which(name)
         if found:
             return found
-    return "java"
+    return None

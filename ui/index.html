@@ -14,22 +14,18 @@
   <nav class="side-nav">
     <button class="tab active" data-page="play" title="Jugar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 4.5v15l13-7.5z" fill="currentColor" stroke="none"/></svg>
-      <span>Jugar</span>
     </button>
-    <button class="tab" data-page="installs" title="Instalaciones">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>
-      <span>Versiones</span>
+    <button class="tab" data-page="installs" title="Versiones">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.8"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.8"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.8"/></svg>
     </button>
     <button class="tab" data-page="skins" title="Skins">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20.5c1.2-3.4 3.9-5 7-5s5.8 1.6 7 5"/></svg>
-      <span>Skins</span>
-    </button>
-    <button class="tab" data-page="settings" title="Ajustes">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
-      <span>Ajustes</span>
     </button>
   </nav>
   <div class="side-bottom">
+    <button class="tab tab-settings" data-page="settings" title="Ajustes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg>
+    </button>
     <span class="ver-chip" id="side-version" title="Versión del launcher">v–</span>
   </div>
 </aside>
@@ -39,42 +35,75 @@
 
   <!-- ============================ JUGAR ========================== -->
   <main id="page-play" class="page active">
-    <section class="hero">
-      <div class="hero-art"></div>
-      <span class="badge-notrack" title="Este launcher no envía datos a nadie. Los servicios de Mojang se bloquean al lanzar el juego.">&#128274; Sin telemetría</span>
-      <div class="hero-content">
-        <img class="hero-logo" src="logo.svg" alt="PureLauncher" draggable="false">
-        <h1 class="wordmark"><b>PURE</b> LAUNCHER</h1>
-        <p id="hero-sub">Rápido, limpio y sin telemetría. Tu juego, tus reglas.</p>
+    <div class="dash">
+      <div class="dash-top">
+        <section class="card hero-card">
+          <div class="hero-card-art"></div>
+          <div class="hero-card-body">
+            <span class="chip chip-green" title="Este launcher no envía datos a nadie. Los servicios de Mojang se bloquean al lanzar el juego.">&#128274; Sin telemetría</span>
+            <h1 id="hero-title">Minecraft</h1>
+            <p id="hero-sub">Tu copia, tus reglas. Rápido, limpio y sin rastreo —
+               importa tu .jar o descarga una versión oficial y juega.</p>
+            <div class="launch-row">
+              <button id="play-btn" class="play-btn" disabled>
+                <span class="play-ico">&#9654;</span>
+                <span class="play-txt">
+                  <span class="play-label">JUGAR</span>
+                  <span class="play-sub" id="play-sub"></span>
+                </span>
+              </button>
+              <div class="version-box">
+                <label class="mini-label">Versión</label>
+                <select id="version-select" class="version-select">
+                  <option value="">— añade una versión —</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <img class="hero-card-logo" src="logo.svg" alt="" draggable="false">
+        </section>
+
+        <aside class="card profile-card">
+          <div class="profile-avatar">
+            <canvas id="profile-skin" width="96" height="192" class="hidden"></canvas>
+            <img id="profile-fallback" src="logo.svg" alt="" draggable="false">
+          </div>
+          <label class="mini-label" for="username">Nombre de jugador</label>
+          <input id="username" maxlength="16" spellcheck="false" autocomplete="off" placeholder="Jugador">
+          <span class="profile-note">Modo offline · sin cuenta</span>
+        </aside>
       </div>
 
-      <footer class="playbar glass">
-        <div class="playbar-side left">
-          <label class="mini-label">Versión</label>
-          <select id="version-select" class="version-select">
-            <option value="">— importa una versión —</option>
-          </select>
-        </div>
-        <button id="play-btn" class="play-btn" disabled>
-          <span class="play-label">JUGAR</span>
-          <span class="play-sub" id="play-sub"></span>
+      <div class="dash-cards">
+        <button class="card shortcut" id="sc-download">
+          <span class="sc-ico">&#8595;</span>
+          <span class="sc-title">Descargar versión</span>
+          <span class="sc-desc">Cualquier versión oficial, lista para jugar offline</span>
         </button>
-        <div class="playbar-side right">
-          <label class="mini-label" for="username">Nombre de jugador</label>
-          <div class="user-row">
-            <div class="steve" aria-hidden="true"></div>
-            <input id="username" maxlength="16" spellcheck="false" autocomplete="off" placeholder="Jugador">
-          </div>
-        </div>
-      </footer>
-    </section>
+        <button class="card shortcut" id="sc-import">
+          <span class="sc-ico">&#128190;</span>
+          <span class="sc-title">Importar mi .jar</span>
+          <span class="sc-desc">Usa el jar de tu copia comprada</span>
+        </button>
+        <button class="card shortcut" id="sc-skins">
+          <span class="sc-ico">&#127912;</span>
+          <span class="sc-title">Skins</span>
+          <span class="sc-desc">Tu biblioteca de skins, aplicadas offline</span>
+        </button>
+        <button class="card shortcut" id="sc-folder">
+          <span class="sc-ico">&#128193;</span>
+          <span class="sc-title">Carpeta del juego</span>
+          <span class="sc-desc">Mundos, mods y recursos</span>
+        </button>
+      </div>
+    </div>
   </main>
 
   <!-- ======================== INSTALACIONES ====================== -->
   <main id="page-installs" class="page">
     <div class="page-inner">
       <div class="page-head">
-        <h2>Instalaciones</h2>
+        <h2>Versiones</h2>
         <div class="head-actions">
           <button id="open-dir-btn" class="btn ghost">Abrir carpeta del juego</button>
           <button id="download-btn" class="btn ghost">&#8595; Descargar versión</button>
@@ -115,6 +144,16 @@
   <main id="page-settings" class="page">
     <div class="page-inner">
       <div class="page-head"><h2>Ajustes</h2></div>
+
+      <div class="setting">
+        <div class="setting-info">
+          <h3>Java</h3>
+          <p id="java-status">Comprobando…</p>
+        </div>
+        <div class="setting-ctrl">
+          <button id="install-java-btn" class="btn ghost small">Instalar Java 21</button>
+        </div>
+      </div>
 
       <div class="setting">
         <div class="setting-info">
@@ -193,7 +232,7 @@
 
       <div class="setting">
         <div class="setting-info">
-          <h3>Ruta de Java</h3>
+          <h3>Ruta de Java personalizada</h3>
           <p id="java-hint">Vacío = detectar automáticamente.</p>
         </div>
         <div class="setting-ctrl row">
@@ -227,8 +266,8 @@
         <div class="setting-info">
           <h3>Actualizaciones</h3>
           <p>Versión actual: <b id="app-version">–</b>.
-             Al arrancar se comprueba automáticamente si hay una versión nueva;
-             también puedes comprobarlo ahora. Si una actualización sale mal,
+             Al arrancar se comprueba automáticamente si hay una versión nueva
+             (solo estables). Si una actualización sale mal,
              usa <b>Restaurar PureLauncher</b> desde el menú Inicio.</p>
         </div>
         <div class="setting-ctrl">

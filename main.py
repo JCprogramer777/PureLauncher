@@ -102,7 +102,7 @@ class Api:
             "config": self.config,
             "installed": installed,
             "running": self.process is not None and self.process.poll() is None,
-            "javaDetected": mc_core.find_java(),
+            "javaDetected": self._detect_java(),
             "appVersion": updater.APP_VERSION,
             "isInstalled": updater.is_frozen(),
             "systemRamMb": optimizer.system_ram_mb(),
@@ -161,6 +161,74 @@ class Api:
                 self.window.destroy()
             except Exception as e:  # noqa: BLE001
                 self._emit("updateError", {"error": str(e)})
+            finally:
+                self._busy = False
+
+        threading.Thread(target=work, daemon=True).start()
+        return {"ok": True}
+
+    # ----------------------------------------------------------------- java
+
+    JAVA_API = ("https://api.adoptium.net/v3/assets/latest/21/hotspot"
+                "?os=windows&architecture=x64&image_type=jre")
+
+    def _find_local_java(self):
+        """javaw.exe del Java instalado por el propio launcher, si existe."""
+        base = os.path.join(CONFIG_DIR, "java")
+        if os.path.isdir(base):
+            for root, _dirs, files in os.walk(base):
+                if "javaw.exe" in files and os.path.basename(root) == "bin":
+                    return os.path.join(root, "javaw.exe")
+        return None
+
+    def _detect_java(self):
+        return (self.config.get("java_path")
+                or self._find_local_java()
+                or mc_core.find_java())
+
+    def install_java(self):
+        """Descarga e instala Temurin JRE 21 en la carpeta del launcher."""
+        if self._busy:
+            return {"ok": False, "error": "Ya hay una operacion en curso."}
+
+        def work():
+            self._busy = True
+            try:
+                self._progress("java", 0, 1, "Buscando la última versión de Java 21…")
+                info = json.loads(mc_core.http_get(self.JAVA_API))
+                pkg = info[0]["binary"]["package"]
+                name = info[0].get("release_name", "Temurin 21")
+                zip_path = os.path.join(
+                    os.environ.get("TEMP", "."), "purelauncher-java.zip"
+                )
+
+                def prog(done, total):
+                    self._progress(
+                        "java", done // 1048576, max(1, total // 1048576),
+                        f"Descargando {name} (JRE)…",
+                    )
+
+                updater.download_zip(pkg["link"], zip_path, prog)
+                self._progress("java", 0, 1, "Extrayendo Java…")
+                java_dir = os.path.join(CONFIG_DIR, "java")
+                import shutil
+                import zipfile
+                shutil.rmtree(java_dir, ignore_errors=True)
+                with zipfile.ZipFile(zip_path) as z:
+                    for n in z.namelist():
+                        if n.startswith(("/", "\\")) or ".." in n.split("/"):
+                            raise RuntimeError("Zip de Java no seguro.")
+                    z.extractall(java_dir)
+                os.remove(zip_path)
+                javaw = self._find_local_java()
+                if not javaw:
+                    raise RuntimeError("No se encontró javaw.exe tras extraer.")
+                self.config["java_path"] = javaw
+                self.save_settings({})
+                self._progress("java", 1, 1, "Java instalado.")
+                self._emit("javaDone", {"ok": True, "path": javaw, "name": name})
+            except Exception as e:  # noqa: BLE001
+                self._emit("javaDone", {"ok": False, "error": str(e)})
             finally:
                 self._busy = False
 
@@ -342,7 +410,12 @@ class Api:
                     )
                 except Exception:  # noqa: BLE001
                     pass
-                java = self.config["java_path"] or mc_core.find_java()
+                java = self._detect_java()
+                if not java:
+                    raise RuntimeError(
+                        "No se encontró Java en este equipo. "
+                        "Ve a Ajustes → Java y pulsa «Instalar Java 21»."
+                    )
                 xms_mb, opt_flags = optimizer.jvm_setup(
                     self.config["opt_level"], self.config["ram_mb"]
                 )
@@ -403,7 +476,9 @@ def main():
     api = Api()
     # Frena el apetito de RAM de WebView2 en equipos modestos: limita el
     # cache en disco y, en modo ligero, los procesos de render.
-    flags = ["--disk-cache-size=33554432"]
+    # --disable-http-cache: la UI es local; evita que el perfil persistente
+    # sirva un app.js viejo tras una actualizacion (bug de la 1.3.3).
+    flags = ["--disable-http-cache", "--disk-cache-size=33554432"]
     lite = api.config.get("lite_mode", "auto")
     if lite == "on" or (lite != "off" and (os.cpu_count() or 8) <= 4):
         flags += ["--renderer-process-limit=1", "--enable-low-end-device-mode"]
@@ -420,14 +495,10 @@ def main():
         background_color="#17171c",
     )
     api.window = window
-    # Perfil persistente de WebView2: la cache va a disco en vez de a RAM
-    # (importante en equipos con poca memoria) y acelera cargas siguientes.
-    webview.start(
-        _close_splash,
-        debug="--debug" in sys.argv,
-        private_mode=False,
-        storage_path=os.path.join(CONFIG_DIR, "webview"),
-    )
+    # Nota: el perfil persistente (private_mode=False) de la 1.3.3 provocaba
+    # una carrera en el puente JS al arrancar (botones muertos). Se vuelve al
+    # perfil en memoria, que arranca fiable.
+    webview.start(_close_splash, debug="--debug" in sys.argv)
 
 
 if __name__ == "__main__":

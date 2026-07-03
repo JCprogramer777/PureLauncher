@@ -103,7 +103,7 @@ class RestoreApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Restauración de PureLauncher")
-        self.root.geometry("520x430")
+        self.root.geometry("540x510")
         self.root.resizable(False, False)
         self.root.configure(bg=BG)
         self.releases = []
@@ -136,13 +136,24 @@ class RestoreApp:
         if bak:
             self.mode.set("backup")
 
-        tk.Radiobutton(card, text="Descargar una versión estable de GitHub:",
+        tk.Radiobutton(card, text="Descargar una versión de GitHub:",
                        variable=self.mode, value="github",
                        bg=CARD, fg=FG, selectcolor=BG,
                        activebackground=CARD, activeforeground=FG,
                        font=("Segoe UI", 10)).pack(anchor="w")
-        self.combo = ttk.Combobox(card, state="disabled", width=44)
-        self.combo.pack(anchor="w", padx=(24, 0), pady=(6, 4))
+        self.listbox = tk.Listbox(
+            card, height=5, width=52, bg=BG, fg=FG,
+            selectbackground=GREEN, selectforeground="white",
+            highlightthickness=0, relief="flat", activestyle="none",
+            font=("Segoe UI", 9), exportselection=False,
+        )
+        self.listbox.pack(anchor="w", padx=(24, 0), pady=(6, 2))
+        self.listbox.bind("<<ListboxSelect>>", lambda _e: self._on_select())
+        self.warn_lbl = tk.Label(
+            card, text="", bg=CARD, fg=DIM, font=("Segoe UI", 8, "bold"),
+            wraplength=430, justify="left",
+        )
+        self.warn_lbl.pack(anchor="w", padx=(24, 0), pady=(0, 2))
 
         self.btn = tk.Button(self.root, text="RESTAURAR", command=self.start,
                              bg=GREEN, fg="white", activebackground="#37b24d",
@@ -174,23 +185,48 @@ class RestoreApp:
 
     # ---------------------------------------------------------------- carga
 
+    def _on_select(self):
+        sel = self.listbox.curselection()
+        if not sel or not self.releases:
+            return
+        self.mode.set("github")
+        if self.releases[sel[0]]["prerelease"]:
+            self.warn_lbl.config(
+                fg="#ff5252",
+                text="⚠ PRE-RELEASE: versión inestable. Podría dañar el "
+                     "launcher u obligarte a restaurar de nuevo.",
+            )
+        else:
+            self.warn_lbl.config(fg=DIM, text="Versión estable.")
+
     def _load_releases(self):
         try:
             self.releases = list_releases()
-            names = [
-                f"{r['tag']}  —  {r['title']}  ({r['size'] / 1048576:.1f} MB)"
-                + ("  [prerelease]" if r["prerelease"] else "")
-                for r in self.releases
-            ]
 
             def fill():
-                self.combo.config(state="readonly", values=names)
-                if names:
-                    self.combo.current(0)
+                self.listbox.delete(0, "end")
+                for i, r in enumerate(self.releases):
+                    label = (f"{r['tag']}  —  {r['title']}"
+                             f"  ({r['size'] / 1048576:.1f} MB)")
+                    if r["prerelease"]:
+                        label = "⚠ " + label + "   [PRE-RELEASE INESTABLE]"
+                    self.listbox.insert("end", label)
+                    if r["prerelease"]:
+                        self.listbox.itemconfig(
+                            i, foreground="#ff5252",
+                            selectbackground="#c62828",
+                        )
+                stable = next(
+                    (i for i, r in enumerate(self.releases)
+                     if not r["prerelease"]), None,
+                )
+                if stable is not None:
+                    self.listbox.selection_set(stable)
+                    self._on_select()
                 self.btn.config(state="normal")
                 self.status_lbl.config(
-                    text=f"{len(names)} versiones disponibles. "
-                         "La primera es la estable más reciente."
+                    text=f"{len(self.releases)} versiones disponibles. "
+                         "Las pre-releases (en rojo) son inestables."
                 )
             self.root.after(0, fill)
         except Exception as e:  # noqa: BLE001
@@ -217,6 +253,21 @@ class RestoreApp:
                 "Instala PureLauncher primero con su instalador.",
             )
             return
+        if self.mode.get() == "github":
+            sel = self.listbox.curselection()
+            if not sel:
+                messagebox.showinfo("Elige una versión",
+                                    "Selecciona una versión de la lista.")
+                return
+            if self.releases[sel[0]]["prerelease"] and not messagebox.askyesno(
+                "Pre-release inestable",
+                "Vas a instalar una PRE-RELEASE.\n\n"
+                "Las pre-releases son versiones de prueba: pueden fallar, "
+                "corromper datos o dañar el launcher (tendrías que volver a "
+                "restaurar).\n\n¿Seguro que quieres continuar?",
+                icon="warning", default="no",
+            ):
+                return
         self.busy = True
         self.btn.config(state="disabled")
         threading.Thread(target=self._work, daemon=True).start()
@@ -229,7 +280,7 @@ class RestoreApp:
                 self.status("Restaurando copia de seguridad local…")
                 apply_tree(updater.backup_dir(), self.status)
             else:
-                rel = self.releases[self.combo.current()]
+                rel = self.releases[self.listbox.curselection()[0]]
                 self.status(f"Descargando {rel['tag']}…")
                 zip_path = os.path.join(
                     os.environ.get("TEMP", "."), "purelauncher-restore.zip"

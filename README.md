@@ -113,8 +113,10 @@ definitiva es añadir una exclusión para la carpeta:
 ## Requisitos
 
 - Windows + Python 3.10+ (con `pywebview`: `pip install pywebview`)
-- Java (para versiones 1.20.5+ se necesita Java 21+; para versiones ≤1.16 suele ir
-  mejor Java 8 — puedes fijar la ruta de Java en Ajustes).
+- Java: si el equipo no lo tiene, el launcher lo detecta y ofrece **instalar
+  Java 21 (Temurin) con un clic** desde Ajustes — se instala en la carpeta del
+  launcher, sin permisos de administrador. Para versiones ≤1.16 suele ir mejor
+  Java 8 (puedes fijar una ruta personalizada en Ajustes).
 
 ## Estructura
 
